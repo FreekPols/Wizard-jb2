@@ -1,16 +1,13 @@
 import type { Component } from "solid-js";
-<<<<<<< HEAD
-
-import logo from "./logo.svg";
-import styles from "./App.module.css";
-=======
 import { Editor } from "./components/Editor";
 import { schema } from "./lib/prosemirror-schema";
-import { Node } from "prosemirror-model";
->>>>>>> 38584ec (Add prosemirror support)
 
 const App: Component = () => {
-  const doc = schema.nodes.doc.createAndFill(null, schema.nodes.paragraph.createAndFill(null, schema.text("Hello world! Try editing me.")))
+  const doc = schema.node("root", null, [
+    schema.node("paragraph", null, [schema.text("This is a test.")]),
+    schema.node("paragraph", null, [schema.text("Try editing me!")]),
+    schema.node("paragraph", null, [schema.text("You can use ctrl-z and ctrl-y to undo and redo")])
+  ])
   return (
     <div>
       <Editor schema={schema} initialDocument={doc!} />
