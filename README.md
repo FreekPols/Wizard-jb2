@@ -57,16 +57,11 @@ For a general overview of Vitest, please view the [Vitest guide](https://vitest.
 
 ## Writing tests
 Tests must contain .test. or .spec. in their file name.
-Example from the guide:
-
-```js
-import { expect, test } from 'vitest'
-import { sum } from './sum.js'
-
-test('adds 1 + 2 to equal 3', () => {
-  expect(sum(1, 2)).toBe(3)
-})
-```
+See [index.test.tsx](app/tests/index.test.tsx) for an example of how to write tests with vitest.
 
 ## Running tests
-Run `npm run test` or `pnpm test`.
+Run `pnpm test` in /app. If you do not quit out it will automatically re-run any tests that are changed.
+
+###  Unauthorized Access error
+If you get an unauthorizedAccess error when running tests, run this in the terminal and run tests again:
+`Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process`
