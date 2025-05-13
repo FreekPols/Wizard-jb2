@@ -50,3 +50,18 @@ pnpm eslint
 
 ## Usage
 Add ```` ```{hello} \<argument\>```` to any markdown file or cell. 
+
+
+# Vitest
+For a general overview of Vitest, please view the [Vitest guide](https://vitest.dev/guide/).
+
+## Writing tests
+Tests must contain .test. or .spec. in their file name.
+See [index.test.tsx](app/tests/index.test.tsx) for an example of how to write tests with vitest.
+
+## Running tests
+Run `pnpm test` in /app. If you do not quit out it will automatically re-run any tests that are changed.
+
+###  Unauthorized Access error
+If you get an unauthorizedAccess error when running tests, run this in the terminal and run tests again:
+`Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process`
