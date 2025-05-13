@@ -50,3 +50,23 @@ pnpm eslint
 
 ## Usage
 Add ```` ```{hello} \<argument\>```` to any markdown file or cell. 
+
+
+# Vitest
+For a general overview of Vitest, please view the [Vitest guide](https://vitest.dev/guide/).
+
+## Writing tests
+Tests must contain .test. or .spec. in their file name.
+Example from the guide:
+
+```
+import { expect, test } from 'vitest'
+import { sum } from './sum.js'
+
+test('adds 1 + 2 to equal 3', () => {
+  expect(sum(1, 2)).toBe(3)
+})
+```
+
+## Running tests
+Run `npm run test` or `pnpm test`.
