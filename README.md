@@ -59,7 +59,7 @@ For a general overview of Vitest, please view the [Vitest guide](https://vitest.
 Tests must contain .test. or .spec. in their file name.
 Example from the guide:
 
-```
+```js
 import { expect, test } from 'vitest'
 import { sum } from './sum.js'
 
