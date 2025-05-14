@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os
+from pathlib import Path
 
 from docutils import nodes
 
@@ -9,6 +9,7 @@ from sphinx.util.docutils import SphinxDirective, SphinxRole
 from sphinx.util.typing import ExtensionMetadata
 
 
+# From tutorial (to be removed)
 class HelloRole(SphinxRole):
     """A role to say hello!"""
     def run(self) -> tuple[list[nodes.Node], list[nodes.system_message]]:
@@ -16,6 +17,7 @@ class HelloRole(SphinxRole):
         return [node], []
 
 
+# From tutorial (to be removed)
 class HelloDirective(SphinxDirective):
     """A directive to say hello!"""
 
@@ -27,20 +29,31 @@ class HelloDirective(SphinxDirective):
 
 
 def extension_name_static_path(app):
-    static_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "_static"))
-    app.config.html_static_path.append(static_path)
+    # Get current dir
+    init_py_dir = Path(__file__).parent.resolve()
+
+    # Get _static dir
+    _static_path = init_py_dir / "_static"
+
+    # Add _static to the extension
+    app.config.html_static_path.append(str(_static_path))
 
 
 def setup(app: Sphinx) -> ExtensionMetadata:
+    # Register the _static folder
     app.connect("builder-inited", extension_name_static_path)
 
+    # From tutorial (to be removed)
     app.add_role('hello', HelloRole())
     app.add_directive('hello', HelloDirective)
 
+    # Add the javascript for the navbar button
     app.add_js_file('edit_button.js', 1)
 
+    # Basic information of the sphinx extension
+    # Match with myproject.toml
     return {
-        'version': '0.1',
+        'version': '0.0.1',
         'parallel_read_safe': True,
         'parallel_write_safe': True,
     }

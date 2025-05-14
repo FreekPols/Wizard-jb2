@@ -5,67 +5,41 @@ function addTeachBooksEditButton() {
     const navbarContainer = document.querySelector('.article-header-buttons');
 
     if (navbarContainer) {
-        // Create the new container
-        const actualContainer = document.createElement('div')
-        actualContainer.classList.add('dropdown', 'dropdown-edit-buttons')
+        // The HTML for the new menu item using the standard sphinx-book-theme
+        // The classes are for the theme (styling)
+        const navIconHTML = `
+            <!-- The new navigation div -->
+            <div class="dropdown">
+                <!-- The button with icon you see --> 
+                <button id="extension_name-button_1" class="btn dropdown-toggle" onclick="extension_name()">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <!-- The menu that shows on hover -->
+                <ul class="dropdown-menu">
+                    <li>
+                        <!-- Icon and text in one button with the onclick value -->
+                        <button id="extension_name-button_2" class="btn btn-sm btn-edit-page dropdown-item" onclick="extension_name()">
+                            <!-- First the icon, then the text -->
+                            <span class="btn__icon-container"><i class="fas fa-pen"></i></span>
+                            <span class="btn__text-container">Edit page</span>
+                        </button>
+                    </li>                
+                </ul>
+            </div>
+        `
 
-        // Create the actual button
-        const editButton = document.createElement('button');
-        editButton.id = 'teachbooks-edit-button';
-        editButton.classList.add('btn', 'dropdown-toggle');
-
-        // Add an icon (using FontAwesome, assuming it's available via the theme)
-        const icon = document.createElement('i');
-        icon.classList.add('fas', 'fa-edit'); // Other icons are possible
-        editButton.appendChild(icon);
-
-        // Logic for what happens when the edit button is clicked
-        editButton.onclick = function() {
-            console.log('TeachBooks Edit button clicked!');
-            alert('Edit functionality to be implemented!');
-        };
-
-        // Add the container to the navbar
-        navbarContainer.prepend(actualContainer)
-
-        // Add the button to the container.
-        actualContainer.appendChild(editButton);
-
-        // As in the basic theme a dropdown menu:
-        // Maybe change this to pure html and add it as a whole... this is a mess
-        // Create a list for the different links
-        const hiddenList = document.createElement('ul')
-        hiddenList.classList.add('dropdown-menu')
-        // Define the list items as 'li' html tags
-        const hiddenListItem = document.createElement('li')
-        // The list item is a button
-        const hiddenButtonContainer = document.createElement('button')
-        hiddenButtonContainer.classList.add('btn', 'btn-sm', 'btn-edit-page', 'dropdown-item')
-        // In the button we have two spans: one for the icon and the other for the text
-        // This is the icon container
-        const hiddenIconContainer = document.createElement('span')
-        hiddenIconContainer.classList.add('btn__icon-container')
-        // The actual icon
-        const actualHiddenIcon = document.createElement('i')
-        actualHiddenIcon.classList.add('fas', 'fa-pen')
-        // The text for the current list item
-        const actualHiddenText = document.createElement('span')
-        actualHiddenText.classList.add('btn__text-container')
-        actualHiddenText.textContent = "Edit page"
-        // Define more list items for more options?
-        // I don't think we need more options
-
-        // Initialise the list next to the actual navbar button
-        actualContainer.appendChild(hiddenList)
-        hiddenList.appendChild(hiddenListItem)
-        hiddenListItem.appendChild(hiddenButtonContainer)
-        hiddenButtonContainer.appendChild(hiddenIconContainer)
-        hiddenIconContainer.appendChild(actualHiddenIcon)
-        hiddenButtonContainer.appendChild(actualHiddenText)
+        // Add the new menu item to the menu
+        navbarContainer.insertAdjacentHTML('afterbegin', navIconHTML);
 
     } else {
         console.warn('TeachBooks: Header container for edit button not found.');
     }
+}
+
+// Logic for what happens when the edit button is clicked
+function extension_name() {
+    console.log('TeachBooks Edit button clicked!');
+    alert('Edit functionality to be implemented!');
 }
 
 // Wait for the DOM to be fully loaded before trying to add the button

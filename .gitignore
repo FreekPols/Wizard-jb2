@@ -1,13 +1,17 @@
 # Bravo voor MacOS
 .DS_Store
 
-# Pip install extension bs
+# Python builds
 /sphinx_extension/extension_name.egg-info/
+/sphinx_extension/dist/
 
 # Code editor bs
 /.vscode/
 /.idea
+.editorconfig
 
-# Vite bs
+
+# Vite builds
 /app/node_modules
 /app/dist
+
