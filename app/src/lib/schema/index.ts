@@ -114,7 +114,8 @@ export const schema = new Schema({
             },
         },
         listItem: {
-            content: "",
+            defining: true,
+            content: "phrasingContent",
             parseDOM: [{ tag: "li" }],
             group: "listContent",
         },
@@ -142,7 +143,6 @@ export const schema = new Schema({
                     tag: "pre",
                     preserveWhitespace: "full",
                     getAttrs(node) {
-                        console.log("getAttrs");
                         return {
                             lang: [...node.classList]
                                 .find((x) => x.startsWith("language-"))
@@ -231,6 +231,70 @@ export const schema = new Schema({
         text: {
             group: "phrasingContent",
             inline: true,
+        },
+        image: {
+            group: "phrasingContent",
+            inline: true,
+            draggable: true,
+            parseDOM: [
+                {
+                    tag: "img[src]",
+                    getAttrs(node) {
+                        return {
+                            url: node.getAttribute("src"),
+                            title: node.getAttribute("title") ?? "",
+                            width:
+                                node.style.width !== ""
+                                    ? node.style.width
+                                    : "100%",
+                            alt: node.getAttribute("alt") ?? "",
+                            class: node.getAttribute("class") ?? "",
+                        };
+                    },
+                },
+            ],
+            toDOM(node) {
+                const img = document.createElement("img");
+                img.src = node.attrs.url;
+                img.title = node.attrs.title;
+                img.style.setProperty("width", node.attrs.width);
+                img.alt = node.attrs.alt;
+                img.className = node.attrs.class;
+
+                return img;
+            },
+            attrs: {
+                class: string({ default: "" }),
+                width: string(),
+                align: oneOf({
+                    values: ["left", "right", "center"] as const,
+                    default: "left",
+                }),
+                url: string(),
+                title: string({ default: "" }),
+                alt: string({ default: "" }),
+                reference: {
+                    validate(value: unknown) {
+                        return (
+                            typeof value === "object" &&
+                            value !== null &&
+                            "referenceType" in value &&
+                            (
+                                ["shortcut", "collapsed", "full"] as unknown[]
+                            ).includes(value.referenceType)
+                        );
+                    },
+                },
+            },
+        },
+        break: {
+            group: "phrasingContent",
+            inline: true,
+            selectable: false,
+            toDOM(_node) {
+                return ["br"];
+            },
+            parseDOM: [{ tag: "br" }],
         },
     },
     topNode: "root",
