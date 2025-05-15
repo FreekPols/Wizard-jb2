@@ -2,30 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from docutils import nodes
-
 from sphinx.application import Sphinx
-from sphinx.util.docutils import SphinxDirective, SphinxRole
 from sphinx.util.typing import ExtensionMetadata
-
-
-# From tutorial (to be removed)
-class HelloRole(SphinxRole):
-    """A role to say hello!"""
-    def run(self) -> tuple[list[nodes.Node], list[nodes.system_message]]:
-        node = nodes.inline(text=f'Hello {self.text}!')
-        return [node], []
-
-
-# From tutorial (to be removed)
-class HelloDirective(SphinxDirective):
-    """A directive to say hello!"""
-
-    required_arguments = 1
-
-    def run(self) -> list[nodes.Node]:
-        paragraph_node = nodes.paragraph(text=f'hello {self.arguments[0]}!')
-        return [paragraph_node]
 
 
 def extension_name_static_path(app):
@@ -42,10 +20,6 @@ def extension_name_static_path(app):
 def setup(app: Sphinx) -> ExtensionMetadata:
     # Register the _static folder
     app.connect("builder-inited", extension_name_static_path)
-
-    # From tutorial (to be removed)
-    app.add_role('hello', HelloRole())
-    app.add_directive('hello', HelloDirective)
 
     # Add the javascript for the navbar button
     app.add_js_file('edit_button.js', 1)
