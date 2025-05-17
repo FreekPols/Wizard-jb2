@@ -1,5 +1,5 @@
 interface AttrDef<T> {
-    default?: T;
+    default?: T | null;
     validate(val: unknown): boolean;
 }
 
@@ -21,7 +21,7 @@ export const string = (
         default?: string;
     } = {},
 ): AttrDef<string> => ({
-    default: opts.default,
+    default: opts.default ?? (opts.optional ? null : undefined),
     validate(val) {
         return (opts.optional && val === undefined) || typeof val === "string";
     },

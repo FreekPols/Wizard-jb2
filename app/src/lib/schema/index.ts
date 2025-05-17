@@ -22,13 +22,13 @@ export const schema = new Schema({
             group: "flowContent",
             content: "phrasingContent*",
             parseDOM: [{ tag: "p" }],
-            toDOM(_node) {
+            toDOM() {
                 return ["p", 0];
             },
         },
         definition: {
             group: "flowContent",
-            toDOM(_node) {
+            toDOM() {
                 return ["div", { class: "definition" }, 0];
             },
         },
@@ -59,13 +59,13 @@ export const schema = new Schema({
         thematicBreak: {
             group: "flowContent",
             parseDOM: [{ tag: "hr" }],
-            toDOM(_node) {
+            toDOM() {
                 return ["hr", 0];
             },
         },
         blockquote: {
             group: "flowContent",
-            toDOM(_node) {
+            toDOM() {
                 return ["blockquote", 0];
             },
         },
@@ -218,7 +218,7 @@ export const schema = new Schema({
         },
         math: {
             attrs: {
-                enumerated: boolean({}),
+                enumerated: boolean(),
             },
             group: "flowContent",
         },
@@ -276,12 +276,16 @@ export const schema = new Schema({
                 reference: {
                     validate(value: unknown) {
                         return (
-                            typeof value === "object" &&
-                            value !== null &&
-                            "referenceType" in value &&
-                            (
-                                ["shortcut", "collapsed", "full"] as unknown[]
-                            ).includes(value.referenceType)
+                            value === null ||
+                            (typeof value === "object" &&
+                                "referenceType" in value &&
+                                (
+                                    [
+                                        "shortcut",
+                                        "collapsed",
+                                        "full",
+                                    ] as unknown[]
+                                ).includes(value.referenceType))
                         );
                     },
                 },
@@ -291,10 +295,81 @@ export const schema = new Schema({
             group: "phrasingContent",
             inline: true,
             selectable: false,
-            toDOM(_node) {
+            toDOM() {
                 return ["br"];
             },
             parseDOM: [{ tag: "br" }],
+        },
+    },
+    marks: {
+        emphasis: {
+            parseDOM: [
+                { tag: "em" },
+                { tag: "i" },
+                { style: "font-style=italic" },
+                {
+                    style: "font-style=normal",
+                    clearMark: (m) => m.type.name === "em",
+                },
+            ],
+            toDOM() {
+                return ["em"];
+            },
+        },
+        strong: {
+            parseDOM: [
+                { tag: "strong" },
+                {
+                    tag: "b",
+                    getAttrs: (n) => n.style.fontWeight !== "normal" && null,
+                },
+                {
+                    style: "font-weight=400",
+                    clearMark: (m) => m.type.name === "strong",
+                },
+                {
+                    style: "font-weight",
+                    getAttrs: (v) =>
+                        /^(bold(er)?|[5-9]\d{2,})$/.test(v) && null,
+                },
+            ],
+            toDOM() {
+                return ["strong"];
+            },
+        },
+        subscript: {
+            parseDOM: [{ tag: "sub" }],
+            toDOM() {
+                return ["sub"];
+            },
+        },
+        superscript: {
+            parseDOM: [{ tag: "sup" }],
+            toDOM() {
+                return ["sup"];
+            },
+        },
+        link: {
+            attrs: {
+                url: string(),
+                title: string({ optional: true }),
+                reference: {
+                    validate(value: unknown) {
+                        return (
+                            value === null ||
+                            (typeof value === "object" &&
+                                "referenceType" in value &&
+                                (
+                                    [
+                                        "shortcut",
+                                        "collapsed",
+                                        "full",
+                                    ] as unknown[]
+                                ).includes(value.referenceType))
+                        );
+                    },
+                },
+            },
         },
     },
     topNode: "root",
