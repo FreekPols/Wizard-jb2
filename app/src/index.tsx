@@ -2,8 +2,8 @@
 import { render } from "solid-js/web";
 
 import "./index.css";
-// import App from "./App";
-import Toolbar from "./toolbar";
+import App from "./App";
+//import Toolbar from "./components/toolbar";
 
 const root = document.getElementById("root");
 
@@ -13,5 +13,6 @@ if (!(root instanceof HTMLElement)) {
   );
 }
 
-//render(() => <App />, root!);
-render(() => <Toolbar />, root!);
+render(() => <App />, root!);
+
+//render(() => <Toolbar />, root!);
