@@ -4,11 +4,12 @@ stages:
   - test
 
 before_script:
+  - cd app
   - npm install --global corepack@latest
   - corepack enable
   - corepack install
   - pnpm config set store-dir .pnpm-store
-  - cd app && pnpm install
+  - pnpm install
 
 cache:
   key:
