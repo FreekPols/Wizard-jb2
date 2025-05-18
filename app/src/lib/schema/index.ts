@@ -149,7 +149,7 @@ export const schema = new Schema({
             toDOM() {
                 return ["div", { class: "html" }, 0];
             },
-            content: "text*",
+            content: "phrasingContent*",
         },
         code: {
             attrs: {
@@ -320,18 +320,19 @@ export const schema = new Schema({
                     validate(value: unknown) {
                         return (
                             value === null ||
-                            (typeof value === "object" &&
+                            (
+                                typeof value === "object" &&
+                                value !== null &&
                                 "referenceType" in value &&
+                                typeof (value as { referenceType?: unknown }).referenceType === "string" &&
                                 (
                                     [
                                         "shortcut",
                                         "collapsed",
                                         "full",
-                                    ] as unknown[]
-                                ).includes(
-                                    (value as { referenceType: string })
-                                        .referenceType,
-                                ))
+                                    ] as string[]
+                                ).includes((value as { referenceType: string }).referenceType)
+                            )
                         );
                     },
                 },
@@ -355,7 +356,7 @@ export const schema = new Schema({
                 { style: "font-style=italic" },
                 {
                     style: "font-style=normal",
-                    clearMark: (m: any) => m.type.name === "em",
+                    clearMark: (m: Mark) => m.type.name === "em",
                 },
             ],
             toDOM() {
@@ -404,15 +405,19 @@ export const schema = new Schema({
                     validate(value: unknown) {
                         return (
                             value === null ||
-                            (typeof value === "object" &&
+                            (
+                                typeof value === "object" &&
+                                value !== null &&
                                 "referenceType" in value &&
+                                typeof (value as { referenceType?: unknown }).referenceType === "string" &&
                                 (
                                     [
                                         "shortcut",
                                         "collapsed",
                                         "full",
-                                    ] as unknown[]
-                                ).includes((value as any).referenceType))
+                                    ] as string[]
+                                ).includes((value as { referenceType: string }).referenceType)
+                            )
                         );
                     },
                 },

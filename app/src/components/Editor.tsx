@@ -55,20 +55,18 @@ export function dispatchCommand(cmd: Command) {
 export function useDispatchCommand() {
   const ctx = useContext(editorContext);
   if (!ctx) throw new Error("Editor context used outside of editor");
-  return (cmd: any) => {
+  return (cmd: Command) => {
     const state = ctx.state();
     const view = ctx.view();
-    let result;
-    if (typeof cmd === "function" && cmd.length === 0) {
-      result = cmd()(state, view.dispatch, view);
-    } else {
-      result = cmd(state, view.dispatch, view);
-    }
+    const result = cmd(state, view.dispatch, view);
 
     view.focus();
     return result;
   };
 }
+
+// When pressing Enter, the marks at the cursor are lost on the new line.
+// This plugin preserves the marks
 
 function preserveMarksPlugin() {
   return new Plugin({
