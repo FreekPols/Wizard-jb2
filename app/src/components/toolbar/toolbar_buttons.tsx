@@ -1,10 +1,10 @@
 import { redo, undo } from "prosemirror-history";
 import {
-    blockquoteActive,
-    codeBlockActive,
-    decreaseIndent,
-    increaseIndent,
-    toggleBlockquote,
+  blockquoteActive,
+  codeBlockActive,
+  decreaseIndent,
+  increaseIndent,
+  toggleBlockquote,
   toggleBold,
   toggleCodeBlock,
   toggleItalic,
@@ -59,7 +59,7 @@ function buttonValuesToHtml(
   );
 }
 export function buttonToHtml(buttonValues: ButtonValues) {
-    if(!buttonsCreated) throw new Error("Buttons not initialised");
+  if (!buttonsCreated) throw new Error("Buttons not initialised");
   return buttonValuesToHtml(
     buttonValues.icon,
     buttonValues.label,
@@ -202,31 +202,33 @@ export function createButtons() {
           )
         : false,
   };
-  
-    indentButton = {
-        icon: "bi-caret-right",
-        label: "Increase Indent",
-        onClick: () => dispatchCommand(increaseIndent()),
-        active: () => undefined
-    }
-    outdentButton = {
-        icon: "bi-caret-left",
-        label: "Decrease Indent",
-        onClick: () => dispatchCommand(decreaseIndent()),
-        active: () => undefined
-    }
-    quoteButton = {
-        icon: "bi-blockquote-left",
-        label: "Blockquote",
-        onClick: () => dispatchCommand(toggleBlockquote),
-        active: () => editorStateAccessor ? blockquoteActive(editorStateAccessor()) : false
-    }
-    codeButton = {
-        icon: "bi-code",
-        label: "Code Block",
-        onClick: () => dispatchCommand(toggleCodeBlock),
-        active: () => editorStateAccessor ? codeBlockActive(editorStateAccessor()) : false
-    }
+
+  indentButton = {
+    icon: "bi-caret-right",
+    label: "Increase Indent",
+    onClick: () => dispatchCommand(increaseIndent()),
+    active: () => undefined,
+  };
+  outdentButton = {
+    icon: "bi-caret-left",
+    label: "Decrease Indent",
+    onClick: () => dispatchCommand(decreaseIndent()),
+    active: () => undefined,
+  };
+  quoteButton = {
+    icon: "bi-blockquote-left",
+    label: "Blockquote",
+    onClick: () => dispatchCommand(toggleBlockquote),
+    active: () =>
+      editorStateAccessor ? blockquoteActive(editorStateAccessor()) : false,
+  };
+  codeButton = {
+    icon: "bi-code",
+    label: "Code Block",
+    onClick: () => dispatchCommand(toggleCodeBlock),
+    active: () =>
+      editorStateAccessor ? codeBlockActive(editorStateAccessor()) : false,
+  };
 
   buttonsCreated = true;
 }
