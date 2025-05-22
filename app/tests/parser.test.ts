@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { parseMyst } from "../src/lib/parser";
+import { mystToProseMirror, parseMyst } from "../src/lib/parser";
 import { Node } from "prosemirror-model";
 import { schema } from "../src/lib/schema";
+import { EXAMPLE_1 } from "./parser_constants";
+import { mystParse } from "myst-parser";
 
 describe("Markdown parser", () => {
     it("parses a basic paragraph", () => {
@@ -138,4 +140,33 @@ describe("Markdown parser", () => {
             expect(admonition.children[0].textContent).toBe(title);
         }
     });
+    it("parses reference-style link", () => {
+        const myst =
+            "[TeachBooks][teachbooks]\n\n[teachbooks]: https://teachbooks.io";
+        const parsed = parseMyst(myst);
+        expect(parsed).toBeInstanceOf(Node);
+        expect(parsed.children).toHaveLength(1);
+
+        const paragraph = parsed.children[0];
+        expect(paragraph.type).toBe(schema.nodes.paragraph);
+        expect(paragraph.children).toHaveLength(1);
+
+        const node = paragraph.children[0];
+        expect(node.marks).toHaveLength(1);
+        expect(node.textContent).toBe("TeachBooks");
+
+        const mark = node.marks[0];
+        expect(mark.type).toBe(schema.marks.link);
+        expect(mark.attrs).toHaveProperty("url", "https://teachbooks.io");
+    });
+    it.for([{ myst: EXAMPLE_1, desc: "example_1" }])(
+        "parses document $desc",
+        ({ myst, desc }) => {
+            const ast = mystParse(myst);
+            console.log(ast);
+            const parsed = parseMyst(myst);
+            const json = parsed.toJSON();
+            expect(json).toMatchFileSnapshot(`./snapshot/parse_${desc}.json`);
+        },
+    );
 });

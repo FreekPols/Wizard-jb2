@@ -24,6 +24,8 @@ import type {
     Admonition,
     AdmonitionTitle,
     Container,
+    Math,
+    InlineMath,
 } from "myst-spec";
 import type { GenericNode, GenericParent } from "myst-common";
 import { Node } from "prosemirror-model";
@@ -48,17 +50,23 @@ export function findDefinitions(
 
 export function parseMyst(source: string): Node {
     const parsed = mystParse(source);
-    // console.log(parsed);
     return mystToProseMirror(parsed);
 }
 
 export function mystToProseMirror(myst: GenericParent): Node {
     const definitions = findDefinitions(myst);
-    return parseTreeRecursively(myst, definitions);
+    const res = parseTreeRecursively(myst, definitions);
+    if (Array.isArray(res)) {
+        throw new TypeError("Final parse result should not be array");
+    }
+    return res;
 }
 
 function children(node: GenericNode, defs: DefinitionMap): Node[] | undefined {
-    return node.children?.map((x) => parseTreeRecursively(x, defs));
+    return node.children?.flatMap((x) => {
+        const res = parseTreeRecursively(x, defs);
+        return Array.isArray(res) ? res : [res];
+    });
 }
 
 function pick<T extends object, A extends keyof T>(
@@ -71,6 +79,20 @@ function pick<T extends object, A extends keyof T>(
     }
     return obj as Pick<T, A>;
 }
+
+const SUPPORTED_DIRECTIVES = [
+    "admonition",
+    "attention",
+    "caution",
+    "danger",
+    "error",
+    "important",
+    "hint",
+    "note",
+    "seealso",
+    "tip",
+    "warning",
+];
 
 const handlers = {
     root: (node: Root, defs: DefinitionMap) =>
@@ -132,7 +154,9 @@ const handlers = {
         schema.node(
             "directive",
             pick(node, "name", "value", "args"),
-            children(node, defs),
+            SUPPORTED_DIRECTIVES.includes(node.name)
+                ? children(node, defs)
+                : undefined,
         ),
     admonition: (node: Admonition, defs: DefinitionMap) =>
         schema.node("admonition", { kind: node.kind }, children(node, defs)),
@@ -141,28 +165,46 @@ const handlers = {
     container: (node: Container, defs: DefinitionMap) =>
         schema.node("container", { kind: node.kind }, children(node, defs)),
     emphasis: (node: Emphasis, defs: DefinitionMap) =>
-        parseTreeRecursively(node, defs).mark([schema.mark("emphasis")]),
+        node.children
+            .flatMap((n) => parseTreeRecursively(n, defs))
+            .map((x) => x.mark([schema.mark("emphasis")])),
     strong: (node: Strong, defs: DefinitionMap) =>
-        parseTreeRecursively(node, defs).mark([schema.mark("strong")]),
+        node.children
+            .flatMap((n) => parseTreeRecursively(n, defs))
+            .map((x) => x.mark([schema.mark("strong")])),
     link: (node: Link, defs: DefinitionMap) =>
-        parseTreeRecursively(node, defs).mark([
-            schema.mark("link", { url: node.url, title: node.title }),
-        ]),
+        node.children
+            .flatMap((n) => parseTreeRecursively(n, defs))
+            .map((x) =>
+                x.mark([schema.mark("link", pick(node, "url", "title"))]),
+            ),
     linkReference: (node: LinkReference, defs: DefinitionMap) =>
-        parseTreeRecursively(node, defs).mark([
-            schema.mark("link", {
-                url: defs.get(node.identifier!.trim().toLowerCase()),
-                reference: {
-                    referenceType: node.referenceType,
-                },
-            }),
-        ]),
+        node.children
+            .flatMap((n) => parseTreeRecursively(n, defs))
+            .map((x) =>
+                x.mark([
+                    schema.mark("link", {
+                        url: defs.get(node.identifier!.trim().toLowerCase()),
+                        reference: {
+                            referenceType: node.referenceType,
+                        },
+                    }),
+                ]),
+            ),
+    math: (node: Math) =>
+        schema.node(
+            "math",
+            pick(node, "identifier", "label"),
+            schema.text(node.value),
+        ),
+    inlineMath: (node: InlineMath) =>
+        schema.node("inlineMath", {}, schema.text(node.value)),
 };
 
 function parseTreeRecursively(
     myst: MystNode,
     definitions: Map<string, Definition>,
-): Node {
+): Node | Node[] {
     if (!(myst.type in handlers))
         throw new RangeError(`Unknown node type '${myst.type}'`);
     const handler = (

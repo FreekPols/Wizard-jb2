@@ -3,10 +3,19 @@ import { Schema, Mark } from "prosemirror-model";
 
 import { boolean, integer, oneOf, string } from "./utils";
 
-// NOTE: Schema inspired by [prosemirror-markdown](https://github.com/ProseMirror/prosemirror-markdown/blob/master/src/schema.ts).
+// NOTE: Schema partially based on [prosemirror-markdown][1].
 // Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
 // Licensed under the MIT (Expat) License; SPDX identifier: MIT.
+//
+// [1]: https://github.com/ProseMirror/prosemirror-markdown/blob/master/src/schema.ts
 
+/** Prosemirror schema
+ *
+ * This is the schema used by prosemirror to determine the structure of the document.
+ * This must match the MyST AST closely, to ensure we create a ~1:1 mapping.
+ *
+ * More info: https://prosemirror.net/docs/guide/#schema
+ */
 export const schema = new Schema({
     nodes: {
         root: {
@@ -249,15 +258,19 @@ export const schema = new Schema({
             attrs: { kind: oneOf({ values: ["figure", "table"] as const }) },
             group: "flowContent",
             toDOM(node) {
-                return ["div", { class: `container ${node.attrs.kind}` }, 0];
+                return [node.attrs.kind, 0];
             },
-            // content: "(caption | legend | image | table)*",
+            content: "flowContent*",
         },
         math: {
-            attrs: { enumerated: boolean() },
+            attrs: {
+                enumerated: boolean({ default: false }),
+                enumerator: string({ optional: true }),
+                label: string({ optional: true }),
+            },
             group: "flowContent",
             toDOM() {
-                return ["span", { class: "math" }, 0];
+                return ["div", { class: "math" }, 0];
             },
             content: "text*",
         },
@@ -273,7 +286,7 @@ export const schema = new Schema({
             toDOM() {
                 return ["div", { class: "footnote-definition" }, 0];
             },
-            content: "flowContent+",
+            content: "flowContent*",
         },
         text: {
             group: "phrasingContent",
@@ -347,11 +360,14 @@ export const schema = new Schema({
                 },
             },
         },
-        caption: {
-            toDOM(_node) {
-                return ["caption", 0];
-            },
+        inlineMath: {
+            group: "phrasingContent",
             content: "text*",
+            inline: true,
+            toDOM() {
+                return ["span", { class: "math" }, 0];
+            },
+            parseDOM: [{ tag: "span[class=math]" }],
         },
         break: {
             group: "phrasingContent",
@@ -416,6 +432,7 @@ export const schema = new Schema({
                 url: string(),
                 title: string({ optional: true }),
                 reference: {
+                    default: null,
                     validate(value: unknown) {
                         return (
                             value === null ||
