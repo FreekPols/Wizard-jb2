@@ -28,7 +28,7 @@ import type {
     InlineMath,
 } from "myst-spec";
 import type { GenericNode, GenericParent } from "myst-common";
-import { Node } from "prosemirror-model";
+import { Mark, Node } from "prosemirror-model";
 
 type DefinitionMap = Map<string, Definition>;
 
@@ -67,6 +67,16 @@ function children(node: GenericNode, defs: DefinitionMap): Node[] | undefined {
         const res = parseTreeRecursively(x, defs);
         return Array.isArray(res) ? res : [res];
     });
+}
+
+function markChildren(
+    node: GenericNode,
+    defs: DefinitionMap,
+    ...marks: Mark[]
+): Node[] | undefined {
+    return node?.children
+        ?.flatMap((n) => parseTreeRecursively(n, defs))
+        ?.map((x) => x.mark([...x.marks, ...marks]));
 }
 
 function pick<T extends object, A extends keyof T>(
@@ -165,32 +175,26 @@ const handlers = {
     container: (node: Container, defs: DefinitionMap) =>
         schema.node("container", { kind: node.kind }, children(node, defs)),
     emphasis: (node: Emphasis, defs: DefinitionMap) =>
-        node.children
-            .flatMap((n) => parseTreeRecursively(n, defs))
-            .map((x) => x.mark([schema.mark("emphasis")])),
+        markChildren(node, defs, schema.mark("emphasis")),
     strong: (node: Strong, defs: DefinitionMap) =>
-        node.children
-            .flatMap((n) => parseTreeRecursively(n, defs))
-            .map((x) => x.mark([schema.mark("strong")])),
+        markChildren(node, defs, schema.mark("strong")),
     link: (node: Link, defs: DefinitionMap) =>
-        node.children
-            .flatMap((n) => parseTreeRecursively(n, defs))
-            .map((x) =>
-                x.mark([schema.mark("link", pick(node, "url", "title"))]),
-            ),
+        markChildren(
+            node,
+            defs,
+            schema.mark("link", pick(node, "url", "title")),
+        ),
     linkReference: (node: LinkReference, defs: DefinitionMap) =>
-        node.children
-            .flatMap((n) => parseTreeRecursively(n, defs))
-            .map((x) =>
-                x.mark([
-                    schema.mark("link", {
-                        url: defs.get(node.identifier!.trim().toLowerCase()),
-                        reference: {
-                            referenceType: node.referenceType,
-                        },
-                    }),
-                ]),
-            ),
+        markChildren(
+            node,
+            defs,
+            schema.mark("link", {
+                url: defs.get(node.identifier!.trim().toLowerCase()),
+                reference: {
+                    referenceType: node.referenceType,
+                },
+            }),
+        ),
     math: (node: Math) =>
         schema.node(
             "math",

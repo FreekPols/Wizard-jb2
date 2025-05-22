@@ -162,11 +162,45 @@ describe("Markdown parser", () => {
     it.for([{ myst: EXAMPLE_1, desc: "example_1" }])(
         "parses document $desc",
         ({ myst, desc }) => {
-            const ast = mystParse(myst);
-            console.log(ast);
             const parsed = parseMyst(myst);
             const json = parsed.toJSON();
             expect(json).toMatchFileSnapshot(`./snapshot/parse_${desc}.json`);
         },
     );
+    it.for([
+        {
+            myst: "**bold**",
+            marks: [["strong"]],
+        },
+        {
+            myst: "*italic*",
+            marks: [["emphasis"]],
+        },
+        {
+            myst: "***bold and italic***",
+            // NOTE: this test might be flaky, since order could be ambiguous
+            marks: [["strong", "emphasis"]],
+        },
+        {
+            myst: "**bold *bold and italic***",
+            marks: [["strong"], ["emphasis", "strong"]],
+        },
+        {
+            myst: "*italic **bold and italic** italic again*",
+            marks: [["emphasis"], ["strong", "emphasis"], ["emphasis"]],
+        },
+        {
+            myst: "[**Bold** link](https://example.org)",
+            marks: [["strong", "link"], ["link"]],
+        },
+    ])("parses marks $marks", ({ myst, marks }) => {
+        const parsed = parseMyst(myst);
+        expect(parsed).toBeInstanceOf(Node);
+        expect(parsed.children).toHaveLength(1);
+        const paragraph = parsed.children[0];
+        expect(paragraph.type).toBe(schema.nodes.paragraph);
+        expect(
+            paragraph.children.map((x) => x.marks.map((m) => m.type.name)),
+        ).toEqual(marks);
+    });
 });
