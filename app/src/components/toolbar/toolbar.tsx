@@ -3,20 +3,13 @@ import "prosemirror-view/style/prosemirror.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import {
-  ToolbarSeparator,
-} from "./toolbar_components";
-import {
-  toolbarButtons
-} from "./toolbar_buttons";
-import {
-  toolbarDropdowns
-} from "./toolbar_dropdowns";
+import { ToolbarSeparator } from "./toolbar_components";
+import { toolbarButtons } from "./toolbar_buttons";
+import { toolbarDropdowns } from "./toolbar_dropdowns";
 
 // --- Main Toolbar Component ---
 // The main toolbar with all formatting and insert controls
 export const Toolbar: Component = () => {
-
   // Initialise all toolbar elements
   toolbarButtons.createButtons();
   toolbarDropdowns.createDropdowns();
@@ -57,7 +50,6 @@ export const Toolbar: Component = () => {
       {toolbarButtons.codeButton}
       <ToolbarSeparator />
       {toolbarDropdowns.insertDropdown}
-      
     </div>
   );
 };

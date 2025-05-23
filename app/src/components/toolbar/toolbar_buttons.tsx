@@ -28,13 +28,15 @@ type ButtonValues = {
 };
 
 function buttonValuesToJSXElement(buttonValues: ButtonValues) {
-    return <ToolbarButton
-        icon={buttonValues.icon}
-        label={buttonValues.label}
-        onClick={buttonValues.onClick}
-        active={buttonValues.active?.()}
-      />;
-  }
+  return (
+    <ToolbarButton
+      icon={buttonValues.icon}
+      label={buttonValues.label}
+      onClick={buttonValues.onClick}
+      active={buttonValues.active?.()}
+    />
+  );
+}
 
 export const toolbarButtons: {
   undoButton?: JSX.Element;
@@ -186,13 +188,15 @@ export const toolbarButtons: {
             )
           : false,
     });
-    this.indentButton = buttonValuesToJSXElement({ //TODO indents do not work
+    this.indentButton = buttonValuesToJSXElement({
+      //TODO indents do not work
       icon: "bi-caret-right",
       label: "Increase Indent",
       onClick: () => dispatchCommand(increaseIndent()),
       active: () => undefined,
     });
-    this.outdentButton = buttonValuesToJSXElement({ //TODO indents do not work
+    this.outdentButton = buttonValuesToJSXElement({
+      //TODO indents do not work
       icon: "bi-caret-left",
       label: "Decrease Indent",
       onClick: () => dispatchCommand(decreaseIndent()),
@@ -212,7 +216,5 @@ export const toolbarButtons: {
       active: () =>
         editorStateAccessor ? codeBlockActive(editorStateAccessor()) : false,
     });
-  }
-}
-
-
+  },
+};
