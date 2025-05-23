@@ -1,59 +1,25 @@
-import { Component, createSignal } from "solid-js";
+import { Component } from "solid-js";
 import "prosemirror-view/style/prosemirror.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import { useDispatchCommand, useEditorState } from "../Editor";
 import {
-  wrapBulletList,
-  wrapOrderedList,
-  setFontSize,
-  setAlign,
-  insertLink,
-  setFontFamily,
-  insertImage,
-  setHeading,
-  setParagraph,
-} from "./toolbar_commands";
-import {
-  ToolbarDropdown,
-  ToolbarDropdownWithLabels,
   ToolbarSeparator,
 } from "./toolbar_components";
 import {
-  getCurrentAlignment,
-  getCurrentFontSize,
-  getCurrentListType,
-} from "./toolbar_utils";
-import {
-  FONT_SIZES,
-  FONT_OPTIONS,
-  HEADER_OPTIONS,
-  ALIGN_ICON_MAP,
-} from "./toolbar_options";
-import {
   toolbarButtons
 } from "./toolbar_buttons";
+import {
+  toolbarDropdowns
+} from "./toolbar_dropdowns";
 
 // --- Main Toolbar Component ---
 // The main toolbar with all formatting and insert controls
 export const Toolbar: Component = () => {
-  const editorStateAccessor = useEditorState();
-  const dispatchCommand = useDispatchCommand();
-  const [_fontSizeInput, setFontSizeInput] = createSignal(
-    editorStateAccessor
-      ? getCurrentFontSize(editorStateAccessor()) || "11"
-      : "11",
-  );
 
-  // Change font size and update input state
-  function changeFontSize(size: string) {
-    dispatchCommand(setFontSize(size));
-    setFontSizeInput(size);
-  }
-
-  // Initialise all toolbar buttons
+  // Initialise all toolbar elements
   toolbarButtons.createButtons();
+  toolbarDropdowns.createDropdowns();
 
   // --- Render Toolbar ---
   return (
@@ -78,176 +44,20 @@ export const Toolbar: Component = () => {
       {toolbarButtons.superscriptButton}
       {toolbarButtons.subscriptButton}
       <ToolbarSeparator />
-
-      {/* Font Family Dropdown */}
-      <ToolbarDropdownWithLabels
-        icon=""
-        title={(() => {
-          if (editorStateAccessor && editorStateAccessor()) {
-            const state = editorStateAccessor();
-            const marks = state.storedMarks || state.selection.$from.marks();
-            const fontMark = marks.find(
-              (mark) => mark.type.name === "fontFamily",
-            );
-            if (fontMark) {
-              const found = FONT_OPTIONS.find(
-                (f) => f.value === fontMark.attrs.family,
-              );
-              return found ? found.label : FONT_OPTIONS[0].label;
-            }
-          }
-          return FONT_OPTIONS[0].label;
-        })()}
-        options={FONT_OPTIONS.map((font) => ({
-          label: font.label,
-          icon: "",
-          onClick: () => {
-            dispatchCommand(setFontFamily(font.value));
-          },
-        }))}
-      />
-
-      {/* Header Dropdown */}
-      <ToolbarDropdownWithLabels
-        icon=""
-        title={(() => {
-          if (editorStateAccessor && editorStateAccessor()) {
-            const { $from } = editorStateAccessor().selection;
-            const node = $from.parent;
-            if (node.type.name === "heading") {
-              return `Heading ${node.attrs.level}`;
-            }
-            return "Normal";
-          }
-          return "Normal";
-        })()}
-        options={HEADER_OPTIONS.map((opt) => ({
-          label: opt.label,
-          icon: "",
-          onClick: () => {
-            if (opt.value === "paragraph") {
-              dispatchCommand(setParagraph());
-            } else {
-              dispatchCommand(setHeading(opt.value as number));
-            }
-          },
-        }))}
-      />
-
-      {/* Font Size Dropdown */}
-      <ToolbarDropdownWithLabels
-        icon=""
-        title={(() => {
-          const size =
-            editorStateAccessor && editorStateAccessor()
-              ? getCurrentFontSize(editorStateAccessor())
-              : null;
-          return size ? size.replace("px", "") : "11";
-        })()}
-        options={FONT_SIZES.map((size) => ({
-          label: size.replace("px", ""),
-          icon: "",
-          onClick: () => changeFontSize(size),
-        }))}
-      />
+      {toolbarDropdowns.fontFamilyDropdown}
+      {toolbarDropdowns.headerDropdown}
+      {toolbarDropdowns.fontSizeDropdown}
       <ToolbarSeparator />
-
-      {/* Alignment Dropdown */}
-      <ToolbarDropdown
-        icon={
-          ALIGN_ICON_MAP[
-            editorStateAccessor && editorStateAccessor()
-              ? getCurrentAlignment(editorStateAccessor())
-              : "left"
-          ]
-        }
-        options={[
-          {
-            label: "Left Align",
-            icon: "bi-text-left",
-            onClick: () => dispatchCommand(setAlign("left")),
-          },
-          {
-            label: "Center Align",
-            icon: "bi-text-center",
-            onClick: () => dispatchCommand(setAlign("center")),
-          },
-          {
-            label: "Right Align",
-            icon: "bi-text-right",
-            onClick: () => dispatchCommand(setAlign("right")),
-          },
-          {
-            label: "Justify",
-            icon: "bi-justify",
-            onClick: () => dispatchCommand(setAlign("justify")),
-          },
-        ]}
-        title="Text Alignment"
-      />
+      {toolbarDropdowns.alignmentDropdown}
       <ToolbarSeparator />
-
-      {/* List Dropdown */}
-      <ToolbarDropdown
-        icon={(() => {
-          if (editorStateAccessor && editorStateAccessor()) {
-            const type = getCurrentListType(editorStateAccessor());
-            return type === "ordered" ? "bi-list-ol" : "bi-list-ul";
-          }
-          return "bi-list-ul";
-        })()}
-        options={[
-          {
-            label: "Bullet List",
-            icon: "bi-list-ul",
-            onClick: () => dispatchCommand(wrapBulletList),
-          },
-          {
-            label: "Numbered List",
-            icon: "bi-list-ol",
-            onClick: () => dispatchCommand(wrapOrderedList),
-          },
-        ]}
-        title={(() => {
-          if (editorStateAccessor && editorStateAccessor()) {
-            const type = getCurrentListType(editorStateAccessor());
-            return type === "ordered" ? "Numbered List" : "Bullet List";
-          }
-          return "Bullet List";
-        })()}
-      />
-
+      {toolbarDropdowns.listDropdown}
       {toolbarButtons.indentButton}
       {toolbarButtons.outdentButton}
       {toolbarButtons.quoteButton}
       {toolbarButtons.codeButton}
       <ToolbarSeparator />
-
-      {/* Insert Dropdown (Link, Image, Table, Equation) */}
-      <ToolbarDropdown
-        icon="bi-plus-lg"
-        options={[
-          {
-            label: "Insert Link",
-            icon: "bi-link-45deg",
-            onClick: () => {
-              const url = prompt("Enter link URL:");
-              if (url) dispatchCommand(insertLink(url));
-            },
-          },
-          {
-            label: "Insert Image",
-            icon: "bi-image",
-            onClick: () => {
-              const url = prompt("Enter image URL:");
-              if (url) dispatchCommand(insertImage(url));
-            },
-          },
-          { label: "Insert Table", icon: "bi-table", onClick: () => {} },
-          { label: "Insert Equation", icon: "bi-sigma", onClick: () => {} },
-        ]}
-        title="Insert"
-      />
+      {toolbarDropdowns.insertDropdown}
+      
     </div>
   );
 };
