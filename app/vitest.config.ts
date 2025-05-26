@@ -25,5 +25,9 @@ export default defineConfig({
             junit: "./test-report.xml",
             json: "./test-report.json",
         },
+
+        coverage: {
+            reporter: ["cobertura", "text-summary"],
+        },
     },
 });

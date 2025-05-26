@@ -29,6 +29,7 @@ test:
   stage: test
   script:
     - pnpm test:ci
+  coverage: '/^Statements\s*:\s*([^%]+)/'
   artifacts:
     paths:
       - app/test-report.xml
