@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
-    "test:ci": "vitest run --reporter=junit",
-    "test:coverage": "vitest run --coverage --coverage.reporter=cobertura",
+    "test:ci": "vitest run --reporter=junit --coverage --coverage.reporter=cobertura",
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
