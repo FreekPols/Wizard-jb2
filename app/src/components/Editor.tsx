@@ -162,3 +162,7 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
     </>
   );
 };
+
+export function useEditorView() {
+  return useContext(editorContext)?.view;
+}
