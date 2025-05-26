@@ -42,9 +42,7 @@ export const GitHubTokenInput = (props: Props) => {
         </button>
       </div>
       {error() && (
-        <div class="mt-2 text-left text-red-600 w-full max-w-md">
-          {error()}
-        </div>
+        <div class="mt-2 text-left text-red-600 w-full max-w-md">{error()}</div>
       )}
       <div class="mt-2 text-left w-full max-w-md">
         <a

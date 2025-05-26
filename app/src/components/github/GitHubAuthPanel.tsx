@@ -13,7 +13,7 @@ type Props = {
 
 async function validateAndSetToken(
   token: string,
-  setToken: Setter<string | null>
+  setToken: Setter<string | null>,
 ): Promise<boolean> {
   // Try to fetch user info to validate the token
   try {
