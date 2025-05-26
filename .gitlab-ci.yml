@@ -32,6 +32,6 @@ test:
   artifacts:
     paths:
       - app/test-report.xml
-  reports:
-    junit:
-      - app/test-report.xml
+    reports:
+      junit:
+        - app/test-report.xml
