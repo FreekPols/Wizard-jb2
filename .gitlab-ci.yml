@@ -35,3 +35,15 @@ test:
     reports:
       junit:
         - app/test-report.xml
+
+coverage:
+  stage: test
+  script:
+    - pnpm test:coverage
+  artifacts:
+    paths:
+      - app/coverage/cobertura-coverage.xml
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: app/coverage/cobertura-coverage.xml
