@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { mystToProseMirror, parseMyst } from "../src/lib/parser";
+import { parseMyst } from "../src/lib/parser";
 import { Node } from "prosemirror-model";
 import { schema } from "../src/lib/schema";
 import { EXAMPLE_1 } from "./parser_constants";
-import { mystParse } from "myst-parser";
 
 describe("Markdown parser", () => {
     it("parses a basic paragraph", () => {

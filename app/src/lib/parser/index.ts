@@ -48,34 +48,43 @@ export function findDefinitions(
     return map;
 }
 
+/** Parse raw MyST into a ProseMirror document.
+ */
 export function parseMyst(source: string): Node {
     const parsed = mystParse(source);
     return mystToProseMirror(parsed);
 }
 
+/** Parse MyST abstract syntax tree into a ProseMirror document.
+ */
 export function mystToProseMirror(myst: GenericParent): Node {
     const definitions = findDefinitions(myst);
-    const res = parseTreeRecursively(myst, definitions);
+    const res = transformAst(myst, definitions);
     if (Array.isArray(res)) {
         throw new TypeError("Final parse result should not be array");
     }
     return res;
 }
 
+/** Utility function to recursively convert children in a handler function.
+ */
 function children(node: GenericNode, defs: DefinitionMap): Node[] | undefined {
     return node.children?.flatMap((x) => {
-        const res = parseTreeRecursively(x, defs);
+        const res = transformAst(x, defs);
         return Array.isArray(res) ? res : [res];
     });
 }
 
+/** Utility function to recursively mark children in a handler function.
+ * This is used to mark inline content as
+ */
 function markChildren(
     node: GenericNode,
     defs: DefinitionMap,
     ...marks: Mark[]
 ): Node[] | undefined {
     return node?.children
-        ?.flatMap((n) => parseTreeRecursively(n, defs))
+        ?.flatMap((n) => transformAst(n, defs))
         ?.map((x) => x.mark([...x.marks, ...marks]));
 }
 
@@ -90,20 +99,44 @@ function pick<T extends object, A extends keyof T>(
     return obj as Pick<T, A>;
 }
 
+/** List of supported directives
+ *
+ * This is the list of directives we currently render into editable content.
+ * Other directives remain untouched and their code will be shown in the editor.
+ */
 const SUPPORTED_DIRECTIVES = [
     "admonition",
-    "attention",
-    "caution",
-    "danger",
-    "error",
-    "important",
-    "hint",
-    "note",
-    "seealso",
-    "tip",
-    "warning",
+    "attention", // alias of 'admonition'
+    "caution", // alias of 'admonition'
+    "danger", // alias of 'admonition'
+    "error", // alias of 'admonition'
+    "important", // alias of 'admonition'
+    "hint", // alias of 'admonition'
+    "note", // alias of 'admonition'
+    "seealso", // alias of 'admonition'
+    "tip", // alias of 'admonition'
+    "warning", // alias of 'admonition'
 ];
 
+/** Handlers for MyST AST types
+ *
+ * These are the handlers that convert the MyST abstract syntax tree into
+ * ProseMirror nodes. They are called by the transformAst function, and in turn
+ * call the transformAst function again, to convert the AST recursively.
+ *
+ * Some nodes cannot be directly converted to ProseMirror nodes, because,
+ * according to the MyST spec, they can include block (flow) or inline
+ * (phrasing) content. This is not supported by ProseMirror, which only allows
+ * a certain node type to support flow xor phrasing content. We get around this
+ * by wrapping inline children in a paragraph. For an example, see listItem
+ *
+ * TODO: Right now, typing is messy, with casting and all. Figure out a way to
+ * have better typing.
+ *
+ * TODO: It seems keeping track of definitions is not necessary, since the
+ * parser seemingly handles this already. It doesn't emit the linkReference
+ * node, even though it is defined in the MyST specification.
+ */
 const handlers = {
     root: (node: Root, defs: DefinitionMap) =>
         schema.node("root", {}, children(node, defs)),
@@ -205,10 +238,13 @@ const handlers = {
         schema.node("inlineMath", {}, schema.text(node.value)),
 };
 
-function parseTreeRecursively(
+function transformAst(
     myst: MystNode,
     definitions: Map<string, Definition>,
 ): Node | Node[] {
+    // TODO: Maybe add some kind of fallback here for unsupported types. This
+    // might not be necessary, because the core specification should remain
+    // pretty stable, and we only parse directives that we know we can handle.
     if (!(myst.type in handlers))
         throw new RangeError(`Unknown node type '${myst.type}'`);
     const handler = (
