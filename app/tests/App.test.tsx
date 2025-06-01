@@ -1,11 +1,10 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render } from "solid-js/web";
 import App from "../src/App";
-import { cleanup } from "@solidjs/testing-library";
 
 describe("<App />", () => {
   afterEach(() => {
-    cleanup();
+    vi.resetModules()
     document.body.innerHTML = "";
   });
 

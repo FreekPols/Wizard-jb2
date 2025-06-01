@@ -1,6 +1,5 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render } from "solid-js/web";
-import { cleanup } from "@solidjs/testing-library";
 import { Editor, useEditorState, useEditorView, useDispatchCommand, useCommand, dispatchCommand } from "../../src/components/Editor";
 import { schema } from "../../src/lib/schema";
 import { Command } from "prosemirror-state";
@@ -8,7 +7,7 @@ import { createEffect } from "solid-js";
 
 describe("<Editor />", () => {
   afterEach(() => {
-    cleanup();
+    vi.resetModules()
     document.body.innerHTML = "";
   });
 
