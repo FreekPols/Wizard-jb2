@@ -71,7 +71,13 @@ export const ToolbarDropdown: Component<{
   // Close dropdown when clicking outside
   onMount(() => {
     const handler = (e: MouseEvent) => {
-      if (open() && buttonRef && !buttonRef.contains(e.target as Node) && menuRef && !menuRef.contains(e.target as Node)) {
+      if (
+        open() &&
+        buttonRef &&
+        !buttonRef.contains(e.target as Node) &&
+        menuRef &&
+        !menuRef.contains(e.target as Node)
+      ) {
         setOpen(false);
         if (buttonRef) buttonRef.style.background = "#fff";
       }
@@ -154,7 +160,13 @@ export const ToolbarDropdownWithLabels: Component<{
   // Close dropdown when clicking outside
   onMount(() => {
     const handler = (e: MouseEvent) => {
-      if (open() && buttonRef && !buttonRef.contains(e.target as Node) && menuRef && !menuRef.contains(e.target as Node)) {
+      if (
+        open() &&
+        buttonRef &&
+        !buttonRef.contains(e.target as Node) &&
+        menuRef &&
+        !menuRef.contains(e.target as Node)
+      ) {
         setOpen(false);
         if (buttonRef) buttonRef.style.background = "#fff";
       }
