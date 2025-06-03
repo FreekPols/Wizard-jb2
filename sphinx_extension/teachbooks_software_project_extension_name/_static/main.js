@@ -22,6 +22,7 @@ function checkTheme() {
  * Only add the extensions button when we have found the right format.
  */
 function initializeExtension() {
+    console.log("extension_name: Version 0.0.5 loaded in :)")
     if (checkTheme()) {
         // Add the button to the navbar
         addTeachBooksEditButton()

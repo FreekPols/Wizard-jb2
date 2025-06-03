@@ -1,3 +1,46 @@
+async function fetchViteApp(baseURL, depth) {
+    let error;
+    for (let i = 0; i <= depth; i++) {
+        let prefix = '';
+        if (i > 0) {
+            prefix = Array(i).fill('../').join('');
+        }
+        const currentPath = prefix + baseURL;
+        const fullUrl = new URL(currentPath, document.baseURI).href; // For logging the attempt
+
+        console.log(`extension_name: Attempting (depth ${i}): ${fullUrl}`);
+
+        try {
+            const response = await fetch(currentPath);
+
+            if (response.ok) {
+                console.log(`extension_name: Successfully fetched from: ${response.url}`);
+                return await response.text(); // Success!
+            } else {
+                // Store the error status for this attempt if it's a client/server error
+                if (response.status >= 400) {
+                    error = new Error(`extension_name: HTTP error ${response.status} for ${response.url}`);
+                }
+                // If not ok (e.g., 404), continue to the next depth
+            }
+        } catch (networkError) {
+            // Network errors (e.g., DNS, CORS, server down)
+            console.warn(`extension_name: Network error for ${fullUrl}:`, networkError);
+            error = networkError; // Store the network error
+            // Continue to the next depth or if it's the last attempt, this error will be thrown
+        }
+    }
+
+    // If the loop completes without returning, all attempts failed.
+    const errorMessage = `Failed to fetch Vite app from "${baseURL}" within ${depth} parent director(y/ies).`;
+    console.error(errorMessage, error || "No specific response error, check network logs.");
+    if (error) {
+        error.message = `extension_name: ${errorMessage} Last error: ${error.message}`;
+        throw error;
+    }
+    throw new Error(errorMessage);
+}
+
 /**
  * Function for adding the actual editor
  */
@@ -22,18 +65,10 @@ function addViteApp() {
 
     // Get the relative path to the Vite app
     const htmlFilePath = '_static/dist/index.html';
-    // const htmlFilePath2 = '././_static/dist/index.html'
 
     // Try to fetch the Vite app
     // Fix this for all paths...
-    fetch(htmlFilePath).then(response => {
-        if (!response.ok) {
-            throw new Error(`extension_name: Response 2 was not ok: ${response.statusText}`);
-        } else {
-            return response.text();
-        }
-        // If OK, pass the response
-    }).then(htmlContent => {
+    fetchViteApp(htmlFilePath, 5).then(htmlContent => {
         // We want to extract the body and script tags
         const parser = new DOMParser();
         // User parser to get usable html app

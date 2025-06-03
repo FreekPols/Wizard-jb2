@@ -3,8 +3,8 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "extension_name"
-version = "0.0.1"
+name = "teachbooks_software_project_extension_name"
+version = "0.0.5"
 description = "A extension for editing TeachBooks"
 authors = [{ name = "Leander Bindt", email = "l.bindt@student.tudelft.nl" }]
 dependencies = ["sphinx", "docutils"]
