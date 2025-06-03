@@ -109,7 +109,11 @@ export const ToolbarDropdown: Component<{
         }}
         title={typeof props.title === "string" ? props.title : undefined}
         aria-expanded={open()}
-        onClick={() => setOpen(!open())}
+        onClick={(e) => {
+          // 2. Added e.stopPropagation()
+          e.stopPropagation();
+          setOpen(!open());
+        }}
         onMouseOver={(e) => (e.currentTarget.style.background = ACCENT)}
         onMouseOut={(e) =>
           !open() && (e.currentTarget.style.background = "#fff")
@@ -198,7 +202,11 @@ export const ToolbarDropdownWithLabels: Component<{
         }}
         title={typeof props.title === "string" ? props.title : undefined}
         aria-expanded={open()}
-        onClick={() => setOpen(!open())}
+        onClick={(e) => {
+          // 2. Added e.stopPropagation()
+          e.stopPropagation();
+          setOpen(!open());
+        }}
         onMouseOver={(e) => (e.currentTarget.style.background = ACCENT)}
         onMouseOut={(e) =>
           !open() && (e.currentTarget.style.background = "#fff")
