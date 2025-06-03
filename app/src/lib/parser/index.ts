@@ -1,5 +1,35 @@
 import { mystParse } from "myst-parser";
 import { schema } from "../schema";
+import { visit } from "unist-util-visit";
+import { unified } from "unified";
+import mystToHtml from "myst-to-html";
+import { buttonRole } from "myst-ext-button";
+import { cardDirective } from "myst-ext-card";
+import { gridDirective } from "myst-ext-grid";
+import { tabDirectives } from "myst-ext-tabs";
+import { proofDirective } from "myst-ext-proof";
+import { exerciseDirectives } from "myt-ext-exercise";
+import {
+    mathPlugin,
+    footnotesPlugin,
+    keysPlugin,
+    htmlPlugin,
+    reconstructHtmlPlugin,
+    basicTransformationsPlugin,
+    enumerateTargetsPlugin,
+    resolveReferencesPlugin,
+    WikiTransformer,
+    GithubTransformer,
+    DOITransformer,
+    RRIDTransformer,
+    RORTransformer,
+    linksPlugin,
+    ReferenceState,
+    abbreviationPlugin,
+    glossaryPlugin,
+    joinGatesPlugin,
+} from "myst-transforms";
+
 import type {
     Node as MystNode,
     Block,
@@ -26,9 +56,10 @@ import type {
     Container,
     Math,
     InlineMath,
+    PhrasingContent,
 } from "myst-spec";
-import type { GenericNode, GenericParent } from "myst-common";
-import { Mark, Node } from "prosemirror-model";
+import type { GenericNode, GenericParent, References } from "myst-common";
+import { Mark, Node, Schema } from "prosemirror-model";
 
 type DefinitionMap = Map<string, Definition>;
 
@@ -254,4 +285,104 @@ function transformAst(
         >
     )[myst.type];
     return handler(myst, definitions);
+}
+
+type NodeName = typeof schema extends Schema<infer T> ? T : never;
+
+function mystNode(
+    type: string,
+    node: Node,
+): MystNode & { children?: MystNode[] } {
+    return {
+        type,
+        children: node.children.map((x) => proseMirrorToMyst(x)),
+    };
+}
+
+const proseMirrorToMystHandlers = {
+    paragraph: (node: Node): Paragraph => ({
+        type: "paragraph",
+        children: node.children.map((x) =>
+            proseMirrorToMyst(x),
+        ) as PhrasingContent[],
+    }),
+    code: (node: Node): Code => mystNode("code", node, {}),
+} satisfies Record<NodeName, (node: Node) => MystNode>;
+
+export function proseMirrorToMyst(node: Node): MystNode {
+    return proseMirrorToMystHandlers[node.type.name as NodeName];
+}
+
+async function parse(
+    text: string,
+    defaultFrontmatter?: PageFrontmatter,
+    options?: {
+        renderers?: Record<string, NodeRenderer>;
+        removeHeading?: boolean;
+        jats?: { fullArticle?: boolean };
+    },
+) {
+    const parseMyst = (content: string) =>
+        mystParse(content, {
+            markdownit: { linkify: true },
+            directives: [
+                cardDirective,
+                gridDirective,
+                ...tabDirectives,
+                proofDirective,
+                ...exerciseDirectives,
+            ],
+            roles: [buttonRole],
+            vfile,
+        });
+    const mdast = parseMyst(text);
+    const linkTransforms = [
+        new WikiTransformer(),
+        new GithubTransformer(),
+        new DOITransformer(),
+        new RRIDTransformer(),
+        new RORTransformer(),
+    ];
+    // For the mdast that we show, duplicate, strip positions and dump to yaml
+    // Also run some of the transforms, like the links
+    const references: References = {
+        cite: { order: [], data: {} },
+    };
+    // const frontmatterRaw = getFrontmatter(vfile, mdast);
+    // const frontmatter: Omit<PageFrontmatter, "parts"> = validatePageFrontmatter(
+    //     frontmatterRaw,
+    //     {
+    //         property: "frontmatter",
+    //         messages: {},
+    //     },
+    // );
+    // const state = new ReferenceState("", {
+    //     frontmatter: {
+    //         ...frontmatter,
+    //         numbering: frontmatter.numbering ?? defaultFrontmatter?.numbering,
+    //     },
+    //     vfile,
+    // });
+    visit(mdast, (n) => {
+        // Before we put in the citation render, we can mark them as errors
+        if (n.type === "cite") {
+            n.error = true;
+        }
+    });
+    unified()
+        .use(reconstructHtmlPlugin) // We need to group and link the HTML first
+        .use(htmlPlugin) // Some of the HTML plugins need to operate on the transformed html, e.g. figure caption transforms
+        .use(basicTransformationsPlugin, { parser: parseMyst })
+        .use(mathPlugin, { macros: frontmatter?.math ?? {} }) // This must happen before enumeration, as it can add labels
+        .use(glossaryPlugin) // This should be before the enumerate plugins
+        .use(abbreviationPlugin, { abbreviations: frontmatter.abbreviations })
+        .use(enumerateTargetsPlugin, { state })
+        .use(linksPlugin, { transformers: linkTransforms })
+        .use(footnotesPlugin)
+        .use(joinGatesPlugin)
+        .use(resolveReferencesPlugin, { state })
+        .use(keysPlugin)
+        .runSync(mdast as any, vfile);
+
+    return mdast;
 }
