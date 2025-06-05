@@ -74,6 +74,8 @@ jupyter-book build book
 jupyter-book clean book
 ```
 
+7. If in VS Code navigate to `book\html\index.html`, right click it and select `Open with Live Server`
+
 
 # Vitest
 For a general overview of Vitest, please view the [Vitest guide](https://vitest.dev/guide/).
