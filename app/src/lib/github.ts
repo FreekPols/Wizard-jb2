@@ -47,7 +47,128 @@ export function useGitHubAuth() {
     return { token, setToken, user, setUser, logout };
 }
 
-export async function commitToGitHubFile({
+
+/**
+ * Gets the latest commit SHA of a branch in a GitHub repository.
+ * @param owner The repository owner
+ * @param repo The repository name
+ * @param branch The branch name
+ * @param token GitHub token
+ * @returns The SHA string
+ * @throws Error if the SHA cannot be retrieved
+ */
+export async function getBranchSha(
+    owner: string,
+    repo: string,
+    branch: string,
+    token: string
+): Promise<string> {
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${branch}`;
+    const headers: Record<string, string> = {
+        Authorization: `token ${token}`,
+        Accept: "application/vnd.github.v3+json",
+        "Content-Type": "application/json",
+    };
+    const resp = await fetch(apiUrl, { headers });
+    const refText = await resp.text();
+    if (!resp.ok)
+        throw new Error("Failed to get branch SHA: " + refText);
+    const refData = JSON.parse(refText);
+    return refData.object.sha;
+}
+
+
+/**
+ * Creates a new branch in the given GitHub repository from a base SHA.
+ * @param owner The repository owner
+ * @param repo The repository name
+ * @param newBranch The new branch name to create
+ * @param baseSha The SHA to branch from (usually the base branch's latest commit)
+ * @param token GitHub token
+ * @throws Error if branch creation fails
+ */
+export async function createBranch(
+    owner: string,
+    repo: string,
+    newBranch: string,
+    baseSha: string,
+    token: string
+): Promise<void> {
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/refs`;
+    const headers: Record<string, string> = {
+        Authorization: `token ${token}`,
+        Accept: "application/vnd.github.v3+json",
+        "Content-Type": "application/json",
+    };
+    const body = JSON.stringify({
+        ref: `refs/heads/${newBranch}`,
+        sha: baseSha,
+    });
+
+    const resp = await fetch(apiUrl, {
+        method: "POST",
+        headers,
+        body,
+    });
+    if (!resp.ok) throw new Error("Failed to create branch");
+}
+
+
+/**
+ * Commits a file to a specific branch in a GitHub repository.
+ * @param owner Repository owner
+ * @param repo Repository name
+ * @param branch Branch to commit to
+ * @param filePath Path of the file to commit
+ * @param content Content of the file to commit
+ * @param commitMsg Commit message
+ * @param token GitHub personal access token
+ * @throws Error if the commit fails
+ */
+export async function commitFileToBranch(
+    owner: string,
+    repo: string,
+    branch: string,
+    filePath: string,
+    content: string,
+    commitMsg: string,
+    token: string
+): Promise<void> {
+    const headers: Record<string, string> = {
+        Authorization: `token ${token}`,
+        Accept: "application/vnd.github.v3+json",
+        "Content-Type": "application/json",
+    };
+
+    const resp = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`,
+        {
+            method: "PUT",
+            headers,
+            body: JSON.stringify({
+                message: commitMsg,
+                content: btoa(unescape(encodeURIComponent(content))),
+                branch,
+            }),
+        }
+    );
+    if (!resp.ok) throw new Error("Failed to commit file");
+}
+
+/**
+ * Commits a file to a specific branch in a GitHub repository.
+ * If the branch does not exist, it will be created from the base branch.
+ * @param token GitHub personal access token
+ * @param owner Repository owner
+ * @param repo Repository name
+ * @param baseBranch Base branch to create the new branch from
+ * @param newBranch Name of the new branch to commit to
+ * @param filePath Path of the file to commit
+ * @param content Content of the file to commit
+ * @param commitMsg Commit message
+ * @returns The branch name and file path where the content was committed
+ */
+export async function comitToGitHub({
     token,
     owner,
     repo,
@@ -66,58 +187,27 @@ export async function commitToGitHubFile({
     content: string;
     commitMsg: string;
 }): Promise<{ branch: string; filePath: string }> {
-    const authHeader = (token: string) => ({
-        Authorization: `token ${token}`,
-        Accept: "application/vnd.github.v3+json",
-        "Content-Type": "application/json",
-    });
-
     // 1. Get the SHA of the base branch
-    const refResp = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${baseBranch}`,
-        { headers: authHeader(token) },
-    );
-    // refText is purely for debugging purposes
-    const refText = await refResp.text();
-    console.log(refText);
-    if (!refResp.ok)
-        throw new Error("Failed to get base branch SHA: " + refText);
-    const refData = JSON.parse(refText);
-    const baseSha = refData.object.sha;
+    const baseSha = await getBranchSha(owner, repo, baseBranch, token);
 
     // --- Check if the branch already exists ---
     const exists = await branchExists(owner, repo, newBranch, token);
 
     // 2. Create a new branch from the base branch only if it doesn't exist
     if (!exists) {
-        const createResp = await fetch(
-            `https://api.github.com/repos/${owner}/${repo}/git/refs`,
-            {
-                method: "POST",
-                headers: authHeader(token),
-                body: JSON.stringify({
-                    ref: `refs/heads/${newBranch}`,
-                    sha: baseSha,
-                }),
-            },
-        );
-        if (!createResp.ok) throw new Error("Failed to create branch");
+        await createBranch(owner, repo, newBranch, baseSha, token);
     }
 
     // 3. Commit the file to the branch (existing or newly created)
-    const commitResp = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`,
-        {
-            method: "PUT",
-            headers: authHeader(token),
-            body: JSON.stringify({
-                message: commitMsg,
-                content: btoa(unescape(encodeURIComponent(content))),
-                branch: newBranch,
-            }),
-        },
+    await commitFileToBranch(
+        owner,
+        repo,
+        newBranch,
+        filePath,
+        content,
+        commitMsg,
+        token
     );
-    if (!commitResp.ok) throw new Error("Failed to commit file");
 
     return { branch: newBranch, filePath };
 }
@@ -201,6 +291,5 @@ export async function branchExists(
     const resp = await fetch(apiUrl, { headers });
     return resp.ok;
 }
-
 
 

@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 import type { GitHubUser } from "../../lib/github";
-import { commitToGitHubFile, repositoryHref, parseOwnerRepoFromHref } from "../../lib/github";
+import { comitToGitHub, repositoryHref, parseOwnerRepoFromHref } from "../../lib/github";
 
 type Props = {
   user: GitHubUser;
@@ -40,7 +40,7 @@ export const GitHubUserPanel = (props: Props) => {
     }
 
     try {
-      const result = await commitToGitHubFile({
+      const result = await comitToGitHub({
         token: props.token,
         owner: repoInfo.owner,
         repo: repoInfo.repo,
