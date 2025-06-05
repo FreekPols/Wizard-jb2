@@ -78,6 +78,11 @@ export const GitHubUserPanel = (props: Props) => {
           placeholder="Enter branch name"
           value={branchName()}
           onInput={(e) => setBranchName(e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleCommit();
+            }
+          }}
         />
         <button
           class="bg-black text-white px-4 py-2 rounded w-full"
