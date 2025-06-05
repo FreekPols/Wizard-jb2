@@ -66,12 +66,11 @@ export const ToolbarDropdown: Component<{
 }> = (props) => {
   const [open, setOpen] = createSignal(false);
   let buttonRef: HTMLButtonElement | undefined;
-  let menuRef: HTMLUListElement | undefined; // 4. Added menuRef
+  let menuRef: HTMLUListElement | undefined;
 
   // Close dropdown when clicking outside
   onMount(() => {
     const handler = (e: MouseEvent) => {
-      // 5. Updated mousedown handler condition
       if (
         open() &&
         buttonRef &&
@@ -80,7 +79,6 @@ export const ToolbarDropdown: Component<{
         !menuRef.contains(e.target as Node)
       ) {
         setOpen(false);
-        // Retaining this style reset as it was in your original specific request
         if (buttonRef) buttonRef.style.background = "#fff";
       }
     };
@@ -124,10 +122,10 @@ export const ToolbarDropdown: Component<{
         <i class={`bi ${props.icon} fs-5`} style={{ color: "#212529" }} />
       </button>
       <ul
-        ref={menuRef} // 4. Assigned menuRef
+        ref={menuRef}
         class="dropdown-menu p-0"
-        classList={{ show: open() }} // 6. Added classList to toggle .show
-        style={{ "min-width": "40px" }}
+        classList={{ show: open() }}
+        style={{ "min-width": "40px", top: "100%", left: "0" }}
       >
         <For each={props.options}>
           {(opt) => (
@@ -161,12 +159,11 @@ export const ToolbarDropdownWithLabels: Component<{
 }> = (props) => {
   const [open, setOpen] = createSignal(false);
   let buttonRef: HTMLButtonElement | undefined;
-  let menuRef: HTMLUListElement | undefined; // 4. Added menuRef
+  let menuRef: HTMLUListElement | undefined; // <-- ADDED menu ref
 
   // Close dropdown when clicking outside
   onMount(() => {
     const handler = (e: MouseEvent) => {
-      // 5. Updated mousedown handler condition
       if (
         open() &&
         buttonRef &&
@@ -175,7 +172,6 @@ export const ToolbarDropdownWithLabels: Component<{
         !menuRef.contains(e.target as Node)
       ) {
         setOpen(false);
-        // Retaining this style reset as it was in your original specific request
         if (buttonRef) buttonRef.style.background = "#fff";
       }
     };
@@ -239,10 +235,10 @@ export const ToolbarDropdownWithLabels: Component<{
         </span>
       </button>
       <ul
-        ref={menuRef} // 4. Assigned menuRef
+        ref={menuRef}
         class="dropdown-menu p-0"
-        classList={{ show: open() }} // 6. Added classList to toggle .show
-        style={{ "min-width": "40px" }}
+        classList={{ show: open() }}
+        style={{ "min-width": "40px", top: "100%", left: "0" }}
       >
         <For each={props.options}>
           {(opt) => (
@@ -308,3 +304,59 @@ export const ToolbarSeparator = () => (
     }}
   />
 );
+
+// --- Table Grid Selector Component ---
+// A component for selecting a table grid size (rows x cols)
+export function TableGridSelector(props: {
+  maxRows?: number;
+  maxCols?: number;
+  onSelect: (rows: number, cols: number) => void;
+  onClose: () => void;
+}) {
+  const [hovered, setHovered] = createSignal<[number, number]>([0, 0]);
+
+  return (
+    <div
+      style={{
+        border: "1px solid #ccc",
+        background: "#fff",
+        padding: "8px",
+        "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
+        position: "absolute",
+        "z-index": 1000,
+      }}
+      onMouseLeave={() => props.onClose()}
+    >
+      <div>
+        <For each={Array.from({ length: props.maxRows ?? 8 })}>
+          {(_, row) => (
+            <div style={{ display: "flex" }}>
+              <For each={Array.from({ length: props.maxCols ?? 8 })}>
+                {(_, col) => {
+                  const selected =
+                    row() <= hovered()[0] && col() <= hovered()[1];
+                  return (
+                    <div
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        border: "1px solid #ccc",
+                        background: selected ? "#D7E1FF" : "#fff",
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={() => setHovered([row(), col()])}
+                      onClick={() => props.onSelect(row() + 1, col() + 1)}
+                    />
+                  );
+                }}
+              </For>
+            </div>
+          )}
+        </For>
+      </div>
+      <div style={{ "margin-top": "8px", "text-align": "center" }}>
+        {hovered()[0] + 1} × {hovered()[1] + 1}
+      </div>
+    </div>
+  );
+}
