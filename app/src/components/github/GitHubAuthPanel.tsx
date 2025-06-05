@@ -3,7 +3,11 @@ import { GitHubTokenInput } from "./GitHubTokenInput";
 import { GitHubUserPanel } from "./GitHubUserPanel";
 import type { GitHubUser } from "../../lib/github";
 import { useEditorView } from "../Editor";
-import { getRepositoryLink, getDefaultBranchFromHref, repositoryHref } from "../../lib/github";
+import {
+  getRepositoryLink,
+  getDefaultBranchFromHref,
+  repositoryHref,
+} from "../../lib/github";
 
 type Props = {
   token: string | null;
@@ -39,7 +43,10 @@ export const GitHubAuthPanel = (props: Props) => {
     // Get the repository link (ensure it's set)
     const href = getRepositoryLink() ?? repositoryHref();
     if (href) {
-      const branch = await getDefaultBranchFromHref(href, props.token ?? undefined);
+      const branch = await getDefaultBranchFromHref(
+        href,
+        props.token ?? undefined,
+      );
       if (branch) setBaseBranch(branch);
     }
   });

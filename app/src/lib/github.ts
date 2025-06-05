@@ -47,7 +47,6 @@ export function useGitHubAuth() {
     return { token, setToken, user, setUser, logout };
 }
 
-
 /**
  * Gets the latest commit SHA of a branch in a GitHub repository.
  * @param owner The repository owner
@@ -61,7 +60,7 @@ export async function getBranchSha(
     owner: string,
     repo: string,
     branch: string,
-    token: string
+    token: string,
 ): Promise<string> {
     const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${branch}`;
     const headers: Record<string, string> = {
@@ -71,12 +70,10 @@ export async function getBranchSha(
     };
     const resp = await fetch(apiUrl, { headers });
     const refText = await resp.text();
-    if (!resp.ok)
-        throw new Error("Failed to get branch SHA: " + refText);
+    if (!resp.ok) throw new Error("Failed to get branch SHA: " + refText);
     const refData = JSON.parse(refText);
     return refData.object.sha;
 }
-
 
 /**
  * Creates a new branch in the given GitHub repository from a base SHA.
@@ -92,7 +89,7 @@ export async function createBranch(
     repo: string,
     newBranch: string,
     baseSha: string,
-    token: string
+    token: string,
 ): Promise<void> {
     const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/refs`;
     const headers: Record<string, string> = {
@@ -113,7 +110,6 @@ export async function createBranch(
     if (!resp.ok) throw new Error("Failed to create branch");
 }
 
-
 /**
  * Commits a file to a specific branch in a GitHub repository.
  * @param owner Repository owner
@@ -132,7 +128,7 @@ export async function commitFileToBranch(
     filePath: string,
     content: string,
     commitMsg: string,
-    token: string
+    token: string,
 ): Promise<void> {
     const headers: Record<string, string> = {
         Authorization: `token ${token}`,
@@ -150,7 +146,7 @@ export async function commitFileToBranch(
                 content: btoa(unescape(encodeURIComponent(content))),
                 branch,
             }),
-        }
+        },
     );
     if (!resp.ok) throw new Error("Failed to commit file");
 }
@@ -206,16 +202,20 @@ export async function comitToGitHub({
         filePath,
         content,
         commitMsg,
-        token
+        token,
     );
 
     return { branch: newBranch, filePath };
 }
 
-export const [repositoryHref, setRepositoryHref] = createSignal<string | null>(null);
+export const [repositoryHref, setRepositoryHref] = createSignal<string | null>(
+    null,
+);
 
 export function getRepositoryLink(): string | null {
-    const anchor = document.querySelector<HTMLAnchorElement>('a.btn-source-repository-button');
+    const anchor = document.querySelector<HTMLAnchorElement>(
+        "a.btn-source-repository-button",
+    );
     if (anchor) {
         setRepositoryHref(anchor.href);
         console.log("Repository link:", anchor.href);
@@ -227,10 +227,12 @@ export function getRepositoryLink(): string | null {
     }
 }
 
-export function parseOwnerRepoFromHref(href: string | null): { owner: string; repo: string } | null {
+export function parseOwnerRepoFromHref(
+    href: string | null,
+): { owner: string; repo: string } | null {
     if (!href) return null;
     // Example: https://github.com/owner/repo
-    const match = href.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    const match = href.match(/github\.com\/([^/]+)\/([^/]+)/);
     if (match) {
         return { owner: match[1], repo: match[2] };
     }
@@ -245,7 +247,7 @@ export function parseOwnerRepoFromHref(href: string | null): { owner: string; re
  */
 export async function getDefaultBranchFromHref(
     href: string,
-    token?: string
+    token?: string,
 ): Promise<string | null> {
     const repoInfo = parseOwnerRepoFromHref(href);
     if (!repoInfo) return null;
@@ -278,7 +280,7 @@ export async function branchExists(
     owner: string,
     repo: string,
     branch: string,
-    token?: string
+    token?: string,
 ): Promise<boolean> {
     const apiUrl = `https://api.github.com/repos/${owner}/${repo}/branches/${encodeURIComponent(branch)}`;
     const headers: Record<string, string> = {
@@ -291,5 +293,3 @@ export async function branchExists(
     const resp = await fetch(apiUrl, { headers });
     return resp.ok;
 }
-
-

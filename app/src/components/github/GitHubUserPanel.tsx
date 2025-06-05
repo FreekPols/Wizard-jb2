@@ -1,6 +1,10 @@
 import { createSignal } from "solid-js";
 import type { GitHubUser } from "../../lib/github";
-import { comitToGitHub, repositoryHref, parseOwnerRepoFromHref } from "../../lib/github";
+import {
+  comitToGitHub,
+  repositoryHref,
+  parseOwnerRepoFromHref,
+} from "../../lib/github";
 
 type Props = {
   user: GitHubUser;
@@ -23,8 +27,8 @@ export const GitHubUserPanel = (props: Props) => {
     const now = new Date();
     const iso = now.toISOString(); // e.g. 2024-06-05T14:23:45.123Z
     const humanTime = iso
-        .replace(/\.\d{3}Z$/, "Z") // Remove milliseconds
-        .replace(/[:.]/g, "-");    // Replace colons and dots with dashes
+      .replace(/\.\d{3}Z$/, "Z") // Remove milliseconds
+      .replace(/[:.]/g, "-"); // Replace colons and dots with dashes
     // Result: 2024-06-05T14-23-45Z
     const commitMsg = humanTime;
 
