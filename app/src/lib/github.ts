@@ -115,3 +115,16 @@ export async function commitToGitHubFile({
 
     return { branch: newBranch, filePath };
 }
+
+export function getRepositoryLink(): string | null {
+  const anchor = document.querySelector<HTMLAnchorElement>('a.btn-source-repository-button');
+  if (anchor) {
+    const href = anchor.href;
+    console.log("Repository link:", href);
+    return href;
+  } else {
+    console.warn("Source repository link not found.");
+    return null;
+  }
+}
+
