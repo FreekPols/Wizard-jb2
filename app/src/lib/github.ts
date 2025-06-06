@@ -293,3 +293,28 @@ export async function branchExists(
     const resp = await fetch(apiUrl, { headers });
     return resp.ok;
 }
+
+/**
+ * Returns a human-readable local time string with timezone, suitable for branch or commit names.
+ * Example: 2024-06-06T16-23-45+02:00
+ */
+export function getLocalHumanTimeString(date: Date = new Date()): string {
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hour = pad(date.getHours());
+    const min = pad(date.getMinutes());
+    const sec = pad(date.getSeconds());
+
+    // Timezone offset in minutes, e.g. +120 for UTC+2
+    const tzOffsetMin = date.getTimezoneOffset();
+    const tzSign = tzOffsetMin <= 0 ? "+" : "-";
+    const absOffset = Math.abs(tzOffsetMin);
+    const tzHour = pad(Math.floor(absOffset / 60));
+    const tzMin = pad(absOffset % 60);
+    const tzString = `${tzSign}${tzHour}:${tzMin}`;
+
+    // Example: 2024-06-06T16-23-45+02:00
+    return `${year}-${month}-${day}T${hour}-${min}-${sec}${tzString}`;
+}

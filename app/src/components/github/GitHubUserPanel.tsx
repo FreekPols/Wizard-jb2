@@ -4,6 +4,7 @@ import {
   comitToGitHub,
   repositoryHref,
   parseOwnerRepoFromHref,
+  getLocalHumanTimeString,
 } from "../../lib/github";
 
 type Props = {
@@ -20,17 +21,13 @@ export const GitHubUserPanel = (props: Props) => {
 
   const handleCommit = async () => {
     setStatus("Committing...");
-    const filePath = `editor-content-${Date.now()}.txt`;
     const content = props.getEditorContent();
 
     // Commit message is now the current time
     const now = new Date();
-    const iso = now.toISOString(); // e.g. 2024-06-05T14:23:45.123Z
-    const humanTime = iso
-      .replace(/\.\d{3}Z$/, "Z") // Remove milliseconds
-      .replace(/[:.]/g, "-"); // Replace colons and dots with dashes
-    // Result: 2024-06-05T14-23-45Z
+    const humanTime = getLocalHumanTimeString(now);
     const commitMsg = humanTime;
+    const filePath = `editor-content-${humanTime}.txt`;
 
     // Use the branch name from input, replacing all spaces with dashes, or the current time
     const inputBranch = branchName().replace(/\s+/g, "-");
