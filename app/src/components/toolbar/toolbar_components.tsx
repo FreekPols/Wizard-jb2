@@ -1,5 +1,5 @@
 import { FONT_OPTIONS, ACCENT } from "./toolbar_options";
-
+import { showTableSelector } from "./toolbar_dropdowns"; 
 import {
   Component,
   createSignal,
@@ -63,8 +63,15 @@ export const ToolbarDropdown: Component<{
   icon: string;
   options: { label: string; icon: string; onClick: () => void }[];
   title?: string;
+  children?: JSX.Element;
+  showTableSelector?: () => boolean;
+  setOpenRef?: (fn: (open: boolean) => void) => void; // <-- add this
 }> = (props) => {
   const [open, setOpen] = createSignal(false);
+
+  // Expose setOpen to parent
+  if (props.setOpenRef) props.setOpenRef(setOpen);
+
   let buttonRef: HTMLButtonElement | undefined;
   let menuRef: HTMLUListElement | undefined;
 
@@ -89,10 +96,7 @@ export const ToolbarDropdown: Component<{
   return (
     <div
       class="dropdown mx-1"
-      style={{
-        display: "flex",
-        "align-items": "center",
-      }}
+      style={{ display: "flex", "align-items": "center", position: "relative" }}
     >
       <button
         ref={buttonRef}
@@ -125,7 +129,12 @@ export const ToolbarDropdown: Component<{
         ref={menuRef}
         class="dropdown-menu p-0"
         classList={{ show: open() }}
-        style={{ "min-width": "40px", top: "100%", left: "0" }}
+        style={{
+          "min-width": "40px",
+          top: "100%",
+          left: "0",
+          ...(props.showTableSelector?.() && { pointerEvents: "none" }),
+        }}
       >
         <For each={props.options}>
           {(opt) => (
@@ -146,6 +155,7 @@ export const ToolbarDropdown: Component<{
           )}
         </For>
       </ul>
+      {props.children}
     </div>
   );
 };
@@ -238,7 +248,12 @@ export const ToolbarDropdownWithLabels: Component<{
         ref={menuRef}
         class="dropdown-menu p-0"
         classList={{ show: open() }}
-        style={{ "min-width": "40px", top: "100%", left: "0" }}
+        style={{
+          "min-width": "40px",
+          top: "100%",
+          left: "0",
+          ...(showTableSelector?.() && { pointerEvents: "none" }), // <-- add this line
+        }}
       >
         <For each={props.options}>
           {(opt) => (
@@ -318,44 +333,62 @@ export function TableGridSelector(props: {
   return (
     <div
       style={{
-        border: "1px solid #ccc",
+        border: "1px solid #d7e1ff",
         background: "#fff",
-        padding: "8px",
-        "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
+        padding: "6px",
+        "box-shadow": "0 2px 8px 0 #d7e1ff55",
         position: "absolute",
         "z-index": 1000,
+        "border-radius": "10px",
+        "min-width": "140px",
       }}
       onMouseLeave={() => props.onClose()}
     >
       <div>
-        <For each={Array.from({ length: props.maxRows ?? 8 })}>
-          {(_, row) => (
-            <div style={{ display: "flex" }}>
-              <For each={Array.from({ length: props.maxCols ?? 8 })}>
-                {(_, col) => {
-                  const selected =
-                    row() <= hovered()[0] && col() <= hovered()[1];
-                  return (
-                    <div
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        border: "1px solid #ccc",
-                        background: selected ? "#D7E1FF" : "#fff",
-                        cursor: "pointer",
+        {(() => {
+          // Only destructure hovered() ONCE here!
+          const [hoverRow, hoverCol] = hovered();
+          return (
+            <>
+              <For each={Array.from({ length: props.maxRows ?? 8 })}>
+                {(_, row) => (
+                  <div style={{ display: "flex" }}>
+                    <For each={Array.from({ length: props.maxCols ?? 8 })}>
+                      {(_, col) => {
+                        const selected = row() <= hoverRow && col() <= hoverCol;
+                        return (
+                          <div
+                            style={{
+                              width: "20px",
+                              height: "20px",
+                              border: "1px solid #d7e1ff",
+                              background: selected ? "#D7E1FF" : "#fff",
+                              cursor: "pointer",
+                              "border-radius": "4px",
+                              "margin": "1px",
+                              "transition": "background 0.1s",
+                              display: "flex",
+                              "align-items": "center",
+                              "justify-content": "center",
+                            }}
+                            onMouseEnter={() => setHovered([row(), col()])}
+                            onClick={() => {
+                              console.log("Grid cell clicked", row() + 1, col() + 1);
+                              props.onSelect(row() + 1, col() + 1);
+                            }}
+                          />
+                        );
                       }}
-                      onMouseEnter={() => setHovered([row(), col()])}
-                      onClick={() => props.onSelect(row() + 1, col() + 1)}
-                    />
-                  );
-                }}
+                    </For>
+                  </div>
+                )}
               </For>
-            </div>
-          )}
-        </For>
-      </div>
-      <div style={{ "margin-top": "8px", "text-align": "center" }}>
-        {hovered()[0] + 1} × {hovered()[1] + 1}
+              <div style={{ "margin-top": "8px", "text-align": "center" }}>
+                {hoverRow + 1} × {hoverCol + 1}
+              </div>
+            </>
+          );
+        })()}
       </div>
     </div>
   );

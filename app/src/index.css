@@ -29,6 +29,18 @@ code {
   max-width: 800px;
 }
 
+.ProseMirror table {
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+.ProseMirror td {
+  border: 1.5px solid #d7e1ff;
+  min-width: 40px;
+  min-height: 24px;
+  padding: 4px;
+  border-radius: 4px;
+}
+
 blockquote {
   border-left: 3px solid #d7e1ff;
   margin-left: 0;

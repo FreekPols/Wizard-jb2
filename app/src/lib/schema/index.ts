@@ -275,11 +275,32 @@ export const schema = new Schema({
             content: "text*",
         },
         table: {
-            group: "flowContent",
+            group: "block",
+            content: "table_row+",
+            tableRole: "table",
+            isolating: true,
             toDOM() {
-                // TODO: Table rendering
-                return ["table", 0];
+                return ["table", ["tbody", 0]];
             },
+            parseDOM: [{ tag: "table" }],
+        },
+        table_row: {
+            content: "table_cell+",
+            tableRole: "row",
+            toDOM() {
+                return ["tr", 0];
+            },
+            parseDOM: [{ tag: "tr" }],
+        },
+        table_cell: {
+            content: "block+",
+            attrs: { style: { default: null } },
+            tableRole: "cell",
+            isolating: true,
+            toDOM(node) {
+                return ["td", node.attrs.style ? { style: node.attrs.style } : {}, 0];
+            },
+            parseDOM: [{ tag: "td", getAttrs: node => ({ style: (node as HTMLElement).getAttribute("style") }) }],
         },
         footnoteDefinition: {
             group: "flowContent",
