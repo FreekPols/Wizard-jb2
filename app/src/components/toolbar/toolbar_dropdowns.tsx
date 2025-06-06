@@ -4,8 +4,8 @@ import {
   setFontFamily,
   setParagraph,
   setHeading,
-  wrapBulletList,
-  wrapOrderedList,
+  toggleBulletList,
+  toggleOrderedList,
   insertLink,
   insertImage,
   // Commented while insertTable is not fully implemented and used
@@ -115,12 +115,22 @@ export const toolbarDropdowns: {
           {
             label: "Bullet List",
             icon: "bi-list-ul",
-            onClick: () => dispatchCommand(wrapBulletList),
+            onClick: () => {
+              const state = editorStateAccessor && editorStateAccessor();
+              if (state) {
+                dispatchCommand(toggleBulletList(state.schema));
+              }
+            },
           },
           {
             label: "Numbered List",
             icon: "bi-list-ol",
-            onClick: () => dispatchCommand(wrapOrderedList),
+            onClick: () => {
+              const state = editorStateAccessor && editorStateAccessor();
+              if (state) {
+                dispatchCommand(toggleOrderedList(state.schema));
+              }
+            },
           },
         ]}
         title={(() => {

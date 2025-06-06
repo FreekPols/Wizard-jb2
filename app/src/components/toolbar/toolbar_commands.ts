@@ -1,13 +1,18 @@
-import { lift, toggleMark, wrapIn, setBlockType } from "prosemirror-commands";
+import {
+    lift,
+    toggleMark,
+    wrapIn,
+    setBlockType,
+    autoJoin,
+} from "prosemirror-commands";
 import { schema } from "../../lib/schema";
 import { EditorState, Transaction } from "prosemirror-state";
-import { MarkType } from "prosemirror-model";
+import { MarkType, Schema } from "prosemirror-model";
 import {
-    sinkListItem,
-    liftListItem,
     wrapInList,
+    liftListItem,
+    sinkListItem,
 } from "prosemirror-schema-list";
-
 // --- MARK COMMANDS ---
 
 // Toggle strong/bold mark
@@ -259,5 +264,83 @@ export function insertMath(equation: string = "") {
             dispatch(state.tr.replaceSelectionWith(mathNode).scrollIntoView());
         }
         return true;
+    };
+}
+
+// Helper: check if selection is in a list and what type
+function getListType(state: EditorState): boolean | null {
+    const { $from } = state.selection;
+    for (let d = $from.depth; d > 0; d--) {
+        const node = $from.node(d);
+        if (node.type.name === "list") {
+            return node.attrs.ordered; // true for ordered, false for bullet
+        }
+    }
+    return null;
+}
+
+// Toggle bullet list
+export function toggleBulletList(schema: Schema) {
+    return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+        const listType = getListType(state);
+        if (listType === false) {
+            // Already in bullet list: remove
+            return liftListItem(schema.nodes.listItem)(state, dispatch);
+        } else if (listType === true) {
+            // In ordered list: lift out, then wrap as bullet
+            if (dispatch) {
+                liftListItem(schema.nodes.listItem)(state, dispatch);
+                autoJoin(
+                    wrapInList(schema.nodes.list, { ordered: false }),
+                    (before, after) =>
+                        before.type === after.type &&
+                        before.type === schema.nodes.list &&
+                        before.attrs.ordered === after.attrs.ordered,
+                )(state, dispatch);
+            }
+            return true;
+        } else {
+            // Not in a list: wrap as bullet
+            return autoJoin(
+                wrapInList(schema.nodes.list, { ordered: false }),
+                (before, after) =>
+                    before.type === after.type &&
+                    before.type === schema.nodes.list &&
+                    before.attrs.ordered === after.attrs.ordered,
+            )(state, dispatch);
+        }
+    };
+}
+
+// Toggle ordered list
+export function toggleOrderedList(schema: Schema) {
+    return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+        const listType = getListType(state);
+        if (listType === true) {
+            // Already in ordered list: remove
+            return liftListItem(schema.nodes.listItem)(state, dispatch);
+        } else if (listType === false) {
+            // In bullet list: lift out, then wrap as ordered
+            if (dispatch) {
+                liftListItem(schema.nodes.listItem)(state, dispatch);
+                autoJoin(
+                    wrapInList(schema.nodes.list, { ordered: true }),
+                    (before, after) =>
+                        before.type === after.type &&
+                        before.type === schema.nodes.list &&
+                        before.attrs.ordered === after.attrs.ordered,
+                )(state, dispatch);
+            }
+            return true;
+        } else {
+            // Not in a list: wrap as ordered
+            return autoJoin(
+                wrapInList(schema.nodes.list, { ordered: true }),
+                (before, after) =>
+                    before.type === after.type &&
+                    before.type === schema.nodes.list &&
+                    before.attrs.ordered === after.attrs.ordered,
+            )(state, dispatch);
+        }
     };
 }

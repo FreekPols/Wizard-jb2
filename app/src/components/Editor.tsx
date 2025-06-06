@@ -15,8 +15,7 @@ import { EditorView } from "prosemirror-view";
 import { keymap } from "prosemirror-keymap";
 import { history, redo, undo } from "prosemirror-history";
 import { baseKeymap } from "prosemirror-commands";
-import { sinkListItem, liftListItem } from "prosemirror-schema-list";
-import { preserveMarksPlugin } from "../lib/editor_plugins";
+import { customListKeymap, preserveMarksPlugin } from "../lib/editor_plugins";
 
 export interface EditorProps {
   schema: Schema;
@@ -75,12 +74,11 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
       doc: props.initialDocument,
       plugins: [
         history(),
+        customListKeymap(props.schema),
         keymap({
           "Mod-z": undo,
           "Mod-y": redo,
           "Mod-Shift-z": redo,
-          Tab: sinkListItem(props.schema.nodes.listItem),
-          "Shift-Tab": liftListItem(props.schema.nodes.listItem),
         }),
         keymap(baseKeymap),
         preserveMarksPlugin(),
