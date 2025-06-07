@@ -3,7 +3,7 @@ import { render } from "solid-js/web";
 
 import "./index.css";
 import App from "./App";
-import { getRepositoryLink } from "./lib/github";
+import { getRepositoryLink, getCurrentFileHref } from "./lib/github";
 
 const root = document.getElementById("root");
 
@@ -14,5 +14,6 @@ if (!(root instanceof HTMLElement)) {
 }
 
 getRepositoryLink();
+getCurrentFileHref();
 
 render(() => <App />, root!);

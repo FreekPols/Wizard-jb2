@@ -252,6 +252,7 @@ export function getRepositoryLink(): string | null {
         console.log("Repository link:", anchor.href);
         return anchor.href;
     } else {
+        // Only happens when a link to a GitHub repository is not found
         console.warn("Source repository link not found.");
         setRepositoryHref(null);
         return null;
@@ -377,4 +378,41 @@ export function getLocalHumanTimeString(date: Date = new Date()): string {
 
     // Example: 2024-06-06T16-23-45+02:00
     return `${year}-${month}-${day}T${hour}-${min}-${sec}${tzString}`;
+}
+
+
+export const [currentFileHref, setCurrentFileHref] = createSignal<string | null>(
+    null,
+);
+
+export function getCurrentFileHref(): string | null {
+    const anchor = document.querySelector<HTMLAnchorElement>(
+        "a.btn-source-edit-button",
+    );
+    if (anchor) {
+        setCurrentFileHref(anchor.href);
+        console.log("Current file:", anchor.href);
+        return anchor.href;
+    } else {
+        // In theory, this should never happen
+        console.warn("Current file link not found.");
+        setCurrentFileHref(null);
+        return null;
+    }
+}
+
+/**
+ * Extracts the file path from a GitHub file URL.
+ * Supports both /blob/<branch>/ and /edit/<branch>/ URLs.
+ * Returns the path part after /blob/<branch>/ or /edit/<branch>/ in the GitHub URL,
+ * or null if not available or not matched.
+ * @param href The GitHub file URL to extract the file path from
+ */
+export function getFilePathFromHref(href: string | null): string | null {
+    if (!href) return null;
+    // Match both /blob/<branch>/ and /edit/<branch>/ patterns
+    const match = href.match(/github\.com\/[^/]+\/[^/]+\/(?:blob|edit)\/[^/]+\/(.+)$/);
+    const filePath = match ? match[1] : null;
+    console.log("Extracted file path:", filePath);
+    return filePath;
 }

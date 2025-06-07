@@ -1,33 +1,52 @@
-import { createSignal } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import type { GitHubUser } from "../../lib/github";
 import {
   comitToGitHub,
   repositoryHref,
   parseOwnerRepoFromHref,
   getLocalHumanTimeString,
+  getDefaultBranchFromHref,
+  getFilePathFromHref,
+  currentFileHref,
 } from "../../lib/github";
 
 type Props = {
   user: GitHubUser;
   onLogout: () => void;
   token: string;
-  baseBranch: string;
   getEditorContent: () => string;
 };
 
 export const GitHubUserPanel = (props: Props) => {
   const [branchName, setBranchName] = createSignal("");
   const [status, setStatus] = createSignal<string | null>(null);
+  const [baseBranch, setBaseBranch] = createSignal<string>("main");
+  const [filePath, setFilePath] = createSignal<string | null>(null);
+
+  onMount(async () => {
+    const href = repositoryHref();
+    if (href) {
+      const branch = await getDefaultBranchFromHref(href, props.token);
+      if (branch) setBaseBranch(branch);
+    }
+    setFilePath(getFilePathFromHref(currentFileHref()));
+  });
 
   const handleCommit = async () => {
     setStatus("Committing...");
     const content = props.getEditorContent();
 
+    // If filePath could not be determined, show an error and return
+    const filePathValue = filePath();
+    if (!filePathValue) {
+      setStatus("Could not determine the current file path.");
+      return;
+    }
+
     // Commit message is now the current time
     const now = new Date();
     const humanTime = getLocalHumanTimeString(now);
     const commitMsg = humanTime;
-    const filePath = `editor-content-${humanTime}.txt`;
 
     // Use the branch name from input, replacing all spaces with dashes, or the current time
     const inputBranch = branchName().replace(/\s+/g, "-");
@@ -45,9 +64,9 @@ export const GitHubUserPanel = (props: Props) => {
         token: props.token,
         owner: repoInfo.owner,
         repo: repoInfo.repo,
-        baseBranch: props.baseBranch,
+        baseBranch: baseBranch(),
         newBranch,
-        filePath,
+        filePath: filePathValue,
         content,
         commitMsg,
       });
