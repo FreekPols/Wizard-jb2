@@ -230,34 +230,36 @@ export function setParagraph() {
 
 // Insert a table with the given number of rows and columns
 export function insertTable(rows: number, cols: number) {
-  return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
-    const { schema } = state;
-    const rowNodes = [];
-    for (let r = 0; r < rows; r++) {
-      const cellNodes = [];
-      for (let c = 0; c < cols; c++) {
-        cellNodes.push(
-          schema.nodes.table_cell.createAndFill({
-            style: "border:1px solid #d7e1ff;min-width:40px;min-height:24px;padding:4px;"
-          })
+    return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+        const { schema } = state;
+        const rowNodes = [];
+        for (let r = 0; r < rows; r++) {
+            const cellNodes = [];
+            for (let c = 0; c < cols; c++) {
+                cellNodes.push(
+                    schema.nodes.table_cell.createAndFill({
+                        style: "border:1px solid #d7e1ff;min-width:40px;min-height:24px;padding:4px;",
+                    }),
+                );
+            }
+            rowNodes.push(
+                schema.nodes.table_row.createAndFill(
+                    null,
+                    cellNodes.filter(
+                        (n): n is NonNullable<typeof n> => n !== null,
+                    ),
+                ),
+            );
+        }
+        const table = schema.nodes.table.createAndFill(
+            null,
+            rowNodes.filter((n): n is NonNullable<typeof n> => n !== null),
         );
-      }
-      rowNodes.push(
-        schema.nodes.table_row.createAndFill(
-          null,
-          cellNodes.filter((n): n is NonNullable<typeof n> => n !== null)
-        )
-      );
-    }
-    const table = schema.nodes.table.createAndFill(
-      null,
-      rowNodes.filter((n): n is NonNullable<typeof n> => n !== null)
-    );
-    if (table && dispatch) {
-      dispatch(state.tr.replaceSelectionWith(table).scrollIntoView());
-    }
-    return true;
-  };
+        if (table && dispatch) {
+            dispatch(state.tr.replaceSelectionWith(table).scrollIntoView());
+        }
+        return true;
+    };
 }
 
 // --- MATH COMMAND ---

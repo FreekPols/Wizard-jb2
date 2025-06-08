@@ -298,9 +298,20 @@ export const schema = new Schema({
             tableRole: "cell",
             isolating: true,
             toDOM(node) {
-                return ["td", node.attrs.style ? { style: node.attrs.style } : {}, 0];
+                return [
+                    "td",
+                    node.attrs.style ? { style: node.attrs.style } : {},
+                    0,
+                ];
             },
-            parseDOM: [{ tag: "td", getAttrs: node => ({ style: (node as HTMLElement).getAttribute("style") }) }],
+            parseDOM: [
+                {
+                    tag: "td",
+                    getAttrs: (node) => ({
+                        style: (node as HTMLElement).getAttribute("style"),
+                    }),
+                },
+            ],
         },
         footnoteDefinition: {
             group: "flowContent",

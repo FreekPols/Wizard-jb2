@@ -183,7 +183,9 @@ export const toolbarDropdowns: {
         title="Insert"
         ref={(el: HTMLButtonElement | undefined) => (insertButtonRef = el)}
         showTableSelector={showTableSelector}
-        setOpenRef={(fn) => { closeInsertDropdown = fn; }}
+        setOpenRef={(fn) => {
+          closeInsertDropdown = fn;
+        }}
       >
         {showTableSelector() && (
           <div

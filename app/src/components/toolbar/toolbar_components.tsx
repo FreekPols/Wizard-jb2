@@ -1,5 +1,5 @@
 import { FONT_OPTIONS, ACCENT } from "./toolbar_options";
-import { showTableSelector } from "./toolbar_dropdowns"; 
+import { showTableSelector } from "./toolbar_dropdowns";
 import {
   Component,
   createSignal,
@@ -365,15 +365,19 @@ export function TableGridSelector(props: {
                               background: selected ? "#D7E1FF" : "#fff",
                               cursor: "pointer",
                               "border-radius": "4px",
-                              "margin": "1px",
-                              "transition": "background 0.1s",
+                              margin: "1px",
+                              transition: "background 0.1s",
                               display: "flex",
                               "align-items": "center",
                               "justify-content": "center",
                             }}
                             onMouseEnter={() => setHovered([row(), col()])}
                             onClick={() => {
-                              console.log("Grid cell clicked", row() + 1, col() + 1);
+                              console.log(
+                                "Grid cell clicked",
+                                row() + 1,
+                                col() + 1,
+                              );
                               props.onSelect(row() + 1, col() + 1);
                             }}
                           />
