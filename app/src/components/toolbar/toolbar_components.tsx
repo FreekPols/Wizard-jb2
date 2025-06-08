@@ -68,14 +68,14 @@ export const ToolbarDropdown: Component<{
 }> = (props) => {
   const [open, setOpen] = createSignal(false);
 
-  // Expose setOpen to parent
-  if (props.setOpenRef) props.setOpenRef(setOpen);
-
   let buttonRef: HTMLButtonElement | undefined;
   let menuRef: HTMLUListElement | undefined;
 
   // Close dropdown when clicking outside
   onMount(() => {
+    // Expose setOpen to parent
+    if (props.setOpenRef) props.setOpenRef(setOpen);
+    
     const handler = (e: MouseEvent) => {
       if (
         open() &&
