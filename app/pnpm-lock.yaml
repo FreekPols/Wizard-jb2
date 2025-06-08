@@ -63,6 +63,9 @@ importers:
       '@types/node':
         specifier: ^22.15.17
         version: 22.15.17
+      '@types/postcss-prefix-selector':
+        specifier: ^1.16.3
+        version: 1.16.3
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.32.1
         version: 8.32.1(@typescript-eslint/parser@8.32.1(eslint@9.26.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.26.0(jiti@2.4.2))(typescript@5.8.3)
@@ -703,6 +706,9 @@ packages:
 
   '@types/node@22.15.17':
     resolution: {integrity: sha512-wIX2aSZL5FE+MR0JlvF87BNVrtFWf6AE6rxSE9X7OwnVvoyCQjpzSRJ+M87se/4QCkCiebQAqrJ0y6fwIyi7nw==}
+
+  '@types/postcss-prefix-selector@1.16.3':
+    resolution: {integrity: sha512-YZLPWRkJIrYjwaqojVDXzaRCAEYslRAm8Shznwwn+ZFA4iKQR4LZlS3d+ZMVteFz4iyQnngZZG7k/GIzV1f3mQ==}
 
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
@@ -2889,6 +2895,10 @@ snapshots:
   '@types/node@22.15.17':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/postcss-prefix-selector@1.16.3':
+    dependencies:
+      postcss: 8.5.4
 
   '@types/unist@2.0.11': {}
 

@@ -66,16 +66,37 @@ function addViteApp() {
     // Get the relative path to the Vite app
     const htmlFilePath = '_static/dist/index.html';
 
-    // Try to fetch the Vite app
-    // Fix this for all paths...
+    // Fetch the Vite app
     fetchViteApp(htmlFilePath, 5).then(htmlContent => {
         // We want to extract the body and script tags
         const parser = new DOMParser();
         // User parser to get usable html app
         const viteApp = parser.parseFromString(htmlContent, "text/html");
 
+        // 1. Get the <style> tag from viteApp's head and add it to the current document's <head>
+        const styleTagFromVite = viteApp.head.querySelector('style');
+        if (styleTagFromVite) {
+            // For <style> tags, importNode is generally fine.
+            const newStyleTag = document.importNode(styleTagFromVite, true); // true for deep copy
+            head.appendChild(newStyleTag);
+            console.log("Style tag added to document <head>.");
+        } else {
+            console.warn("Style tag not found in the parsed HTML's head.");
+        }
 
-        // Get the script tag form the Vite app
+        // 2. Add the root tag to the document body
+        const rootDivFromVite = viteApp.body.querySelector('#root'); // Or viteApp.getElementById('root')
+        if (rootDivFromVite) {
+            // For regular HTML elements, importNode is the standard way.
+            const newRootDiv = document.importNode(rootDivFromVite, true); // true for deep copy
+            editorSection.appendChild(newRootDiv);
+            articleContainer.appendChild(editorSection);
+            console.log("Div #root added to .bd-article.");
+        } else {
+            console.warn("Div with id 'root' not found in the parsed HTML's body.");
+        }
+
+        // 3. Get the script tag form the Vite app
         const scriptTagFromVite = viteApp.head.querySelector('script');
         if (scriptTagFromVite) {
             // IMPORTANT: For inline scripts to execute reliably when moved between documents
@@ -97,28 +118,6 @@ function addViteApp() {
             console.log("Script tag added to document <head>.");
         } else {
             console.warn("extension_name: Script tag not found in the parsed HTML's head.");
-        }
-
-        // 2. Get the <style> tag from viteApp's head and add it to the current document's <head>
-        const styleTagFromVite = viteApp.head.querySelector('style');
-        if (styleTagFromVite) {
-            // For <style> tags, importNode is generally fine.
-            const newStyleTag = document.importNode(styleTagFromVite, true); // true for deep copy
-            head.appendChild(newStyleTag);
-            console.log("Style tag added to document <head>.");
-        } else {
-            console.warn("Style tag not found in the parsed HTML's head.");
-        }
-
-        const rootDivFromVite = viteApp.body.querySelector('#root'); // Or viteApp.getElementById('root')
-        if (rootDivFromVite) {
-            // For regular HTML elements, importNode is the standard way.
-            const newRootDiv = document.importNode(rootDivFromVite, true); // true for deep copy
-            editorSection.appendChild(newRootDiv);
-            articleContainer.appendChild(editorSection);
-            console.log("Div #root added to .bd-article.");
-        } else {
-            console.warn("Div with id 'root' not found in the parsed HTML's body.");
         }
     })
     // If something went wrong
