@@ -89,7 +89,6 @@ export const GitHubUserPanel = (props: Props) => {
         props.token,
         baseBranch(),
       );
-      await database.clear("markdown"); // <-- Reset the markdown store after commit
       setStatus(
         `Committed ${filesToCommit.length} file(s) to branch ${newBranch} at ${commitMsg}. Please wait at least a minute before attempting to commit changes to the same files on the same branch!`,
       );
