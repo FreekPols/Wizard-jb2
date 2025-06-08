@@ -227,37 +227,38 @@ export function setParagraph() {
 }
 
 // --- TABLE COMMAND ---
-
 // Insert a table with the given number of rows and columns
 export function insertTable(rows: number, cols: number) {
     return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
         const { schema } = state;
+        const { table, table_row, table_cell, paragraph } = schema.nodes;
+
         const rowNodes = [];
+
         for (let r = 0; r < rows; r++) {
             const cellNodes = [];
             for (let c = 0; c < cols; c++) {
-                cellNodes.push(
-                    schema.nodes.table_cell.createAndFill({
-                        style: "border:1px solid #d7e1ff;min-width:40px;min-height:24px;padding:4px;",
-                    }),
-                );
+                const cellContent = paragraph.create();
+                cellNodes.push(table_cell.create(null, cellContent));
             }
-            rowNodes.push(
-                schema.nodes.table_row.createAndFill(
-                    null,
-                    cellNodes.filter(
-                        (n): n is NonNullable<typeof n> => n !== null,
-                    ),
-                ),
-            );
+            rowNodes.push(table_row.create(null, cellNodes));
         }
-        const table = schema.nodes.table.createAndFill(
-            null,
-            rowNodes.filter((n): n is NonNullable<typeof n> => n !== null),
-        );
-        if (table && dispatch) {
-            dispatch(state.tr.replaceSelectionWith(table).scrollIntoView());
+
+        const tableNode = table.create(null, rowNodes);
+        const before = paragraph.create();
+        const after = paragraph.create();
+
+        const content = state.schema.nodes.root
+            ? state.schema.nodes.root.create(null, [before, tableNode, after])
+            : state.schema.nodes.doc.create(null, [before, tableNode, after]);
+
+        if (dispatch) {
+            const tr = state.tr
+                .replaceSelectionWith(content)
+                .scrollIntoView();
+            dispatch(tr);
         }
+
         return true;
     };
 }
