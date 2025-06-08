@@ -75,7 +75,7 @@ export const ToolbarDropdown: Component<{
   onMount(() => {
     // Expose setOpen to parent
     if (props.setOpenRef) props.setOpenRef(setOpen);
-    
+
     const handler = (e: MouseEvent) => {
       if (
         open() &&

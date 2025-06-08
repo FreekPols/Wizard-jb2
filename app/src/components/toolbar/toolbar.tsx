@@ -1,4 +1,3 @@
- 
 import { Component } from "solid-js";
 import "prosemirror-view/style/prosemirror.css";
 import "bootstrap/dist/css/bootstrap.min.css";
