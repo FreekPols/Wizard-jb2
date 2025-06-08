@@ -253,9 +253,7 @@ export function insertTable(rows: number, cols: number) {
             : state.schema.nodes.doc.create(null, [before, tableNode, after]);
 
         if (dispatch) {
-            const tr = state.tr
-                .replaceSelectionWith(content)
-                .scrollIntoView();
+            const tr = state.tr.replaceSelectionWith(content).scrollIntoView();
             dispatch(tr);
         }
 
