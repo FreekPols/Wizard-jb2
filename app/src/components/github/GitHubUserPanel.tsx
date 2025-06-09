@@ -144,13 +144,13 @@ export const GitHubUserPanel = (props: Props) => {
         />
 
         {/* File selection submenu moved above the commit button */}
-        <div class="mb-4">
+        <div class="mb-2">
           <label class="block font-semibold mb-1">
             Select files to commit:
           </label>
           <div
             class="border rounded p-2 bg-white overflow-y-auto"
-            style={{ "max-height": "180px" }} // Limit menu height to 200px, scroll if needed
+            style={{ "max-height": "160px" }}
           >
             {availableFiles().length === 0 && (
               <div class="text-gray-500">No files in database.</div>
@@ -178,43 +178,49 @@ export const GitHubUserPanel = (props: Props) => {
                 </label>
               </div>
             )}
-            <For each={availableFiles()}>{([key]) => (
-              <div class="mb-1">
-                <label class="block cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedFiles().has(key)}
-                    onChange={(e) => {
-                      const newSet = new Set(selectedFiles());
-                      if (e.currentTarget.checked) {
-                        newSet.add(key);
-                      } else {
-                        newSet.delete(key);
-                      }
-                      setSelectedFiles(newSet);
-                    }}
-                  />
-                  <span class="ml-2">{key}</span>
-                </label>
-              </div>
-            )}</For>
+            <For each={availableFiles()}>
+              {([key]) => (
+                <div class="mb-1">
+                  <label class="block cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedFiles().has(key)}
+                      onChange={(e) => {
+                        const newSet = new Set(selectedFiles());
+                        if (e.currentTarget.checked) {
+                          newSet.add(key);
+                        } else {
+                          newSet.delete(key);
+                        }
+                        setSelectedFiles(newSet);
+                      }}
+                    />
+                    <span class="ml-2">{key}</span>
+                  </label>
+                </div>
+              )}
+            </For>
           </div>
         </div>
 
-        <button
-          class="bg-black text-white px-4 py-2 rounded w-full"
-          onClick={handleCommit}
-        >
-          Commit
-        </button>
-        {status() && <div class="mt-2 text-center text-sm">{status()}</div>}
+        {/* Status directly below the selection menu, no extra margin */}
+        {status() && <div class="text-center text-sm">{status()}</div>}
+
+        <div class="flex gap-8 mt-2">
+          <button
+            class="bg-black text-white px-4 py-2 rounded flex-1"
+            onClick={handleCommit}
+          >
+            Commit
+          </button>
+          <button
+            onClick={() => props.onLogout()}
+            class="bg-black text-white px-4 py-2 rounded flex-1"
+          >
+            Logout
+          </button>
+        </div>
       </div>
-      <button
-        onClick={() => props.onLogout()}
-        class="mt-4 bg-black text-white px-4 py-2 rounded"
-      >
-        Logout
-      </button>
     </div>
   );
 };
