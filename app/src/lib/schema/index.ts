@@ -403,6 +403,13 @@ export const schema = new Schema({
             },
             parseDOM: [{ tag: "br" }],
         },
+        hard_break: {
+            group: "phrasingContent",
+            inline: true,
+            selectable: false,
+            parseDOM: [{ tag: "br" }],
+            toDOM() { return ["br"]; }
+        },
     },
     marks: {
         emphasis: {

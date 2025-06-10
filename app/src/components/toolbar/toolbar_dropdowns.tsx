@@ -183,8 +183,8 @@ export const toolbarDropdowns: {
           <div
             style={{
               position: "fixed",
-              top: "50%",
-              left: "50%",
+              top: "20%",
+              left: "45%",
               transform: "translate(-50%, -50%)",
               background: "#fff",
               padding: "8px",

@@ -15,7 +15,8 @@ import { EditorView } from "prosemirror-view";
 import { keymap } from "prosemirror-keymap";
 import { history, redo, undo } from "prosemirror-history";
 import { baseKeymap } from "prosemirror-commands";
-import { customListKeymap, preserveMarksPlugin } from "../lib/editor_plugins";
+import { customListKeymap, preserveMarksPlugin, tableAndCodeExitKeymap } from "./toolbar/editor_plugins";
+import { table } from "console";
 
 export interface EditorProps {
   schema: Schema;
@@ -82,6 +83,7 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
         }),
         keymap(baseKeymap),
         preserveMarksPlugin(),
+        tableAndCodeExitKeymap(props.schema),
         new Plugin({
           view() {
             return {
