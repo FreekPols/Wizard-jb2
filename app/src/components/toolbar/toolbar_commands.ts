@@ -292,30 +292,17 @@ function getListType(state: EditorState): boolean | null {
 // Toggle bullet list
 export function toggleBulletList(schema: Schema) {
     return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
-        const listType = getListType(state);
-        if (listType === false) {
-            // Already in bullet list: remove
-            return liftListItem(schema.nodes.listItem)(state, dispatch);
-        } else if (listType === true) {
-            // In ordered list: lift out, then wrap as bullet
-            if (dispatch) {
-                liftListItem(schema.nodes.listItem)(state, dispatch);
-                autoJoin(
-                    wrapInList(schema.nodes.list, { ordered: false }),
-                    (before, after) =>
-                        before.type === after.type &&
-                        before.type === schema.nodes.list &&
-                        before.attrs.ordered === after.attrs.ordered,
-                )(state, dispatch);
-            }
-            return true;
+        const { listItem, list } = schema.nodes;
+        if (selectionHasList(state, listItem)) {
+            // Remove all lists in selection
+            return liftListItems(state, dispatch) || false;
         } else {
-            // Not in a list: wrap as bullet
+            // Wrap all blocks in a bullet list and auto-join adjacent lists
             return autoJoin(
-                wrapInList(schema.nodes.list, { ordered: false }),
+                wrapInList(list, { ordered: false }),
                 (before, after) =>
                     before.type === after.type &&
-                    before.type === schema.nodes.list &&
+                    before.type === list &&
                     before.attrs.ordered === after.attrs.ordered,
             )(state, dispatch);
         }
@@ -353,4 +340,31 @@ export function toggleOrderedList(schema: Schema) {
             )(state, dispatch);
         }
     };
+}
+
+// Helper: check if any listItem is in the selection
+function selectionHasList(state: EditorState, listItemType: any) {
+  let found = false;
+  state.doc.nodesBetween(state.selection.from, state.selection.to, (node) => {
+    if (node.type === listItemType) found = true;
+  });
+  return found;
+}
+
+// Helper: lift all listItems in selection
+function liftListItems(state: EditorState, dispatch?: (tr: Transaction) => void) {
+  const { tr, selection, schema } = state;
+  let modified = false;
+  state.doc.nodesBetween(selection.from, selection.to, (node, pos, parent, index) => {
+    if (node.type === schema.nodes.listItem) {
+      const $pos = tr.doc.resolve(tr.mapping.map(pos));
+      const range = $pos.blockRange();
+      if (range) {
+        tr.lift(range, 0);
+        modified = true;
+      }
+    }
+  });
+  if (modified && dispatch) dispatch(tr.scrollIntoView());
+  return modified;
 }

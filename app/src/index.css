@@ -33,10 +33,9 @@ code {
   border-collapse: collapse;
   border: 1px solid #d7e1ff;
   background: #fff;
-  display: block;
+  width: max-content;      /* Table only as wide as needed */
   max-width: 100%;
-  overflow-x: auto;
-  width: max-content;
+  table-layout: auto;      /* Let columns auto-size */
 }
 
 .ProseMirror > table,
@@ -50,11 +49,15 @@ code {
   padding: 2px 6px;
   background: #f9f9fa;
   min-width: 60px;
-  width: 120px;
-  max-width: 300px;
+  white-space: pre-line;   /* Wrap only on newlines */
   word-break: break-word;
-  vertical-align: top;
-  height: auto;   
+  font-size: 14px;         /* Ensure consistent font size */
+}
+
+.ProseMirror td p,
+.ProseMirror th p {
+  margin: 0;
+  font-size: 14px; /* Ensure paragraphs in cells have the same font size */
 }
 
 blockquote {

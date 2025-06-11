@@ -99,7 +99,7 @@ export const schema = new Schema({
             },
         },
         blockquote: {
-            group: "flowContent",
+            group: "block flowContent",
             content: "flowContent+",
             toDOM() {
                 return ["blockquote", 0];

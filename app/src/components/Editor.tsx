@@ -15,9 +15,10 @@ import { EditorView } from "prosemirror-view";
 import { keymap } from "prosemirror-keymap";
 import { history, redo, undo } from "prosemirror-history";
 import { baseKeymap } from "prosemirror-commands";
-import { customListKeymap, preserveMarksPlugin, tableAndCodeExitKeymap, mathDeleteKeymap, codeBlockKeymap } from "./toolbar/editor_plugins";
+import { customListKeymap, preserveMarksPlugin, tableAndCodeExitKeymap, mathDeleteKeymap, codeBlockKeymap, tableAfterDeleteKeymap } from "./toolbar/editor_plugins";
 import { MathNodeView } from "./MathNodeView";
 import { ImageNodeView } from "./ImageNodeView";
+import { tableEditing } from "prosemirror-tables";
 
 export interface EditorProps {
   schema: Schema;
@@ -77,16 +78,18 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
       plugins: [
         history(),
         customListKeymap(props.schema),
+        preserveMarksPlugin(),
+        tableAndCodeExitKeymap(props.schema),
+        codeBlockKeymap(props.schema),
+        mathDeleteKeymap(props.schema),
+        tableAfterDeleteKeymap(props.schema),
+        tableEditing(),
         keymap({
           "Mod-z": undo,
           "Mod-y": redo,
           "Mod-Shift-z": redo,
         }),
         keymap(baseKeymap),
-        preserveMarksPlugin(),
-        tableAndCodeExitKeymap(props.schema),
-        codeBlockKeymap(props.schema),
-        mathDeleteKeymap(props.schema),
         new Plugin({
           view() {
             return {
