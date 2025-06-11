@@ -24,6 +24,7 @@ getCurrentFileHref();
 //initialise database
 if (ref != null) {
   database.setActiveRepo(ref);
+  database.setActiveBranch("localBranchName"); //TODO this needs to be selected by the user
   console.info("Database initialised.");
 } else {
   console.warn("Database not initialised - no github repo link found.");
