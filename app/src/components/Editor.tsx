@@ -15,8 +15,9 @@ import { EditorView } from "prosemirror-view";
 import { keymap } from "prosemirror-keymap";
 import { history, redo, undo } from "prosemirror-history";
 import { baseKeymap } from "prosemirror-commands";
-import { customListKeymap, preserveMarksPlugin, tableAndCodeExitKeymap, mathDeleteKeymap } from "./toolbar/editor_plugins";
+import { customListKeymap, preserveMarksPlugin, tableAndCodeExitKeymap, mathDeleteKeymap, codeBlockKeymap } from "./toolbar/editor_plugins";
 import { MathNodeView } from "./MathNodeView";
+import { ImageNodeView } from "./ImageNodeView";
 
 export interface EditorProps {
   schema: Schema;
@@ -84,6 +85,7 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
         keymap(baseKeymap),
         preserveMarksPlugin(),
         tableAndCodeExitKeymap(props.schema),
+        codeBlockKeymap(props.schema),
         mathDeleteKeymap(props.schema),
         new Plugin({
           view() {
@@ -118,6 +120,14 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
               return pos;
             };
             return new MathNodeView(node, view, safeGetPos);
+          },
+          image(node, view, getPos) {
+            const safeGetPos = () => {
+              const pos = getPos?.();
+              if (typeof pos !== "number") throw new Error("getPos is undefined or not a number");
+              return pos;
+            };
+            return new ImageNodeView(node, view, safeGetPos);
           },
         },
       }),

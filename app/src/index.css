@@ -31,14 +31,30 @@ code {
 
 .ProseMirror table {
   border-collapse: collapse;
+  border: 1px solid #d7e1ff;
+  background: #fff;
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  width: max-content;
+}
+
+.ProseMirror > table,
+.ProseMirror table {
   margin: 1em 0;
 }
-.ProseMirror td {
-  border: 1.5px solid #d7e1ff;
-  min-width: 40px;
-  min-height: 24px;
-  padding: 4px;
-  border-radius: 4px;
+
+.ProseMirror td,
+.ProseMirror th {
+  border: 1px solid #d7e1ff;
+  padding: 2px 6px;
+  background: #f9f9fa;
+  min-width: 60px;
+  width: 120px;
+  max-width: 300px;
+  word-break: break-word;
+  vertical-align: top;
+  height: auto;   
 }
 
 blockquote {
@@ -99,4 +115,26 @@ a {
   overflow-x: auto;
   white-space: pre;
   word-break: break-word;
+}
+
+.image-node {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+.resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  background: #1976d2;
+  cursor: nwse-resize;
+  border-radius: 50%;
+  z-index: 10;
+  display: none;
+}
+.image-node img:active + .resize-handle,
+.image-node img:focus + .resize-handle {
+  display: block;
 }

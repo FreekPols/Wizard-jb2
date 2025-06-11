@@ -36,7 +36,7 @@ export const schema = new Schema({
             },
         },
         paragraph: {
-            group: "flowContent",
+            group: "block flowContent",
             content: "phrasingContent*",
             marks: "_",
             attrs: {
@@ -85,7 +85,7 @@ export const schema = new Schema({
                 { tag: "h5", attrs: { level: 5 } },
                 { tag: "h6", attrs: { level: 6 } },
             ],
-            group: "flowContent",
+            group: "block flowContent",
             toDOM(node) {
                 const { level, align } = node.attrs;
                 return [`h${level}`, { style: `text-align: ${align}` }, 0];
