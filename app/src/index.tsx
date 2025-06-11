@@ -6,7 +6,7 @@ import {
   getRepositoryLink,
   getCurrentFileHref,
   getFilePathFromHref,
-} from "./lib/github/GitHubUtility";
+} from "./lib/github/GithubUtility";
 import { database } from "./lib/localStorage/database";
 
 const root = document.getElementById("root");

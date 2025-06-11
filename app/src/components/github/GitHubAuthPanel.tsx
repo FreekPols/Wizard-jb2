@@ -1,7 +1,7 @@
 import { Show, type Setter } from "solid-js";
 import { GitHubTokenInput } from "./GitHubTokenInput";
 import { GitHubUserPanel } from "./GitHubUserPanel";
-import type { GitHubUser } from "../../lib/github/GitHubLogin";
+import type { GitHubUser } from "../../lib/github/GithubLogin";
 
 type Props = {
   token: string | null;

@@ -223,10 +223,12 @@ export const database = {
         const allKeys = await tx.store.getAllKeys();
         const results: [IDBValidKey, T][] = [];
 
+        // Only include keys for the current repo AND branch
+        const prefix = `${this.activeRepo}::${this.activeBranch}::`;
         for (const key of allKeys) {
             if (
                 typeof key === "string" &&
-                key.startsWith(`${this.activeRepo}::`)
+                key.startsWith(prefix)
             ) {
                 const strippedKey = _stripPrefix(
                     this.activeRepo,
