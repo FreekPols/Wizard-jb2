@@ -1,4 +1,5 @@
 import { openDB, IDBPDatabase } from "idb";
+import { Mutex } from "async-mutex";
 
 /**
  * Configuration for {@link database}.
@@ -26,8 +27,12 @@ export const config = {
  * @param key The name of the key.
  * @returns The key with the prefix added.
  */
-const _makePrefixedKey = (repo: string, key: IDBValidKey): IDBValidKey => {
-    return `${repo}::${key}`;
+const _makePrefixedKey = (
+    repo: string,
+    branch: string,
+    key: IDBValidKey,
+): IDBValidKey => {
+    return `${repo}::${branch}::${key}`;
 };
 
 /**
@@ -36,9 +41,14 @@ const _makePrefixedKey = (repo: string, key: IDBValidKey): IDBValidKey => {
  * @param fullKey The combination of the repo and the name of the key.
  * @returns The key with the prefix removed.
  */
-const _stripPrefix = (repo: string, fullKey: IDBValidKey): IDBValidKey => {
-    if (typeof fullKey === "string" && fullKey.startsWith(`${repo}::`)) {
-        return fullKey.slice(repo.length + 2); // +2 for '::'
+const _stripPrefix = (
+    repo: string,
+    branch: string,
+    fullKey: IDBValidKey,
+): IDBValidKey => {
+    const prefix = `${repo}::${branch}::`;
+    if (typeof fullKey === "string" && fullKey.startsWith(prefix)) {
+        return fullKey.slice(prefix.length);
     }
     return fullKey;
 };
@@ -57,6 +67,11 @@ const _validateStore = (store: string): void => {
 };
 
 /**
+ * Used to serialise changes to the active branch, and read / write operations.
+ */
+const _mutex = new Mutex();
+
+/**
  * Transactional functions for interacting with IndexedDB.
  * Uses the {@link https://www.npmjs.com/package/idb | idb} library.
  *
@@ -72,6 +87,12 @@ export const database = {
      * All keys are namespaced using this value to avoid collisions across repos.
      */
     activeRepo: "" as string,
+
+    /**
+     * The currently active branch.
+     * All keys are namespaced using this value to avoid collisions across branches.
+     */
+    activeBranch: "" as string,
 
     /**
      * Gets the currently active repo namespace.
@@ -97,11 +118,33 @@ export const database = {
     },
 
     /**
+     * Gets the currently active branch namespace.
+     * @returns The active branch string.
+     */
+    getActiveBranch(): string {
+        return this.activeBranch;
+    },
+
+    /**
+     * Sets the active branch. Is done in a transaction to prevent changing the branch
+     * in the middle of read or write operations. TODO
+     * @param branch - The branch name.
+     */
+    async setActiveBranch(branch: string) {
+        const release = await _mutex.acquire();
+        try {
+            this.activeBranch = branch;
+        } finally {
+            release();
+        }
+    },
+
+    /**
      * Indicates whether the repo has been initialized.
      * @returns True if initialized, false otherwise.
      */
     isInitialised() {
-        return this.activeRepo != "";
+        return this.activeRepo != "" && this.activeBranch != "";
     },
 
     /**
@@ -112,21 +155,26 @@ export const database = {
     async getDB(): Promise<IDBPDatabase> {
         if (!this.isInitialised()) {
             throw new Error(
-                "Attempting to access database before setting the active repo. Make sure the repo is set before any database interactions take place!",
+                "Attempting to access database before setting the active repo and or branch. Make sure the repo is set before any database interactions take place!",
             );
         }
-        if (!this.dbPromise) {
-            this.dbPromise = openDB(config.name, config.version, {
-                upgrade(db) {
-                    for (const store of config.stores) {
-                        if (!db.objectStoreNames.contains(store)) {
-                            db.createObjectStore(store);
+        const release = await _mutex.acquire();
+        try {
+            if (!this.dbPromise) {
+                this.dbPromise = openDB(config.name, config.version, {
+                    upgrade(db) {
+                        for (const store of config.stores) {
+                            if (!db.objectStoreNames.contains(store)) {
+                                db.createObjectStore(store);
+                            }
                         }
-                    }
-                },
-            });
+                    },
+                });
+            }
+            return this.dbPromise;
+        } finally {
+            release();
         }
-        return this.dbPromise;
     },
 
     /**
@@ -136,12 +184,21 @@ export const database = {
      * @param value - The value to save.
      */
     async save<T>(store: string, key: IDBValidKey, value: T): Promise<void> {
-        _validateStore(store);
-        const db = await this.getDB();
-        const tx = db.transaction(store, "readwrite");
-        const fullKey = _makePrefixedKey(this.activeRepo, key);
-        await tx.store.put(value, fullKey);
-        await tx.done;
+        const release = await _mutex.acquire();
+        try {
+            _validateStore(store);
+            const db = await this.getDB();
+            const tx = db.transaction(store, "readwrite");
+            const fullKey = _makePrefixedKey(
+                this.activeRepo,
+                this.activeBranch,
+                key,
+            );
+            await tx.store.put(value, fullKey);
+            await tx.done;
+        } finally {
+            release();
+        }
     },
 
     /**
@@ -151,13 +208,22 @@ export const database = {
      * @returns The stored value or undefined if not found.
      */
     async load<T>(store: string, key: IDBValidKey): Promise<T | undefined> {
-        _validateStore(store);
-        const db = await this.getDB();
-        const tx = db.transaction(store, "readonly");
-        const fullKey = _makePrefixedKey(this.activeRepo, key);
-        const result = await tx.store.get(fullKey);
-        await tx.done;
-        return result;
+        const release = await _mutex.acquire();
+        try {
+            _validateStore(store);
+            const db = await this.getDB();
+            const tx = db.transaction(store, "readonly");
+            const fullKey = _makePrefixedKey(
+                this.activeRepo,
+                this.activeBranch,
+                key,
+            );
+            const result = await tx.store.get(fullKey);
+            await tx.done;
+            return result;
+        } finally {
+            release();
+        }
     },
 
     /**
@@ -166,27 +232,36 @@ export const database = {
      * @returns An array of [key, value] tuples.
      */
     async loadAll<T>(store: string): Promise<[IDBValidKey, T][]> {
-        _validateStore(store);
-        const db = await this.getDB();
-        const tx = db.transaction(store, "readonly");
-        const allKeys = await tx.store.getAllKeys();
-        const results: [IDBValidKey, T][] = [];
+        const release = await _mutex.acquire();
+        try {
+            _validateStore(store);
+            const db = await this.getDB();
+            const tx = db.transaction(store, "readonly");
+            const allKeys = await tx.store.getAllKeys();
+            const results: [IDBValidKey, T][] = [];
 
-        for (const key of allKeys) {
-            if (
-                typeof key === "string" &&
-                key.startsWith(`${this.activeRepo}::`)
-            ) {
-                const strippedKey = _stripPrefix(this.activeRepo, key);
-                const value = await tx.store.get(key);
-                if (value !== undefined) {
-                    results.push([strippedKey, value]);
+            for (const key of allKeys) {
+                if (
+                    typeof key === "string" &&
+                    key.startsWith(`${this.activeRepo}::`)
+                ) {
+                    const strippedKey = _stripPrefix(
+                        this.activeRepo,
+                        this.activeBranch,
+                        key,
+                    );
+                    const value = await tx.store.get(key);
+                    if (value !== undefined) {
+                        results.push([strippedKey, value]);
+                    }
                 }
             }
-        }
 
-        await tx.done;
-        return results;
+            await tx.done;
+            return results;
+        } finally {
+            release();
+        }
     },
 
     /**
@@ -195,12 +270,21 @@ export const database = {
      * @param key - The key to delete.
      */
     async delete(store: string, key: IDBValidKey): Promise<void> {
-        _validateStore(store);
-        const db = await this.getDB();
-        const tx = db.transaction(store, "readwrite");
-        const fullKey = _makePrefixedKey(this.activeRepo, key);
-        await tx.store.delete(fullKey);
-        await tx.done;
+        const release = await _mutex.acquire();
+        try {
+            _validateStore(store);
+            const db = await this.getDB();
+            const tx = db.transaction(store, "readwrite");
+            const fullKey = _makePrefixedKey(
+                this.activeRepo,
+                this.activeBranch,
+                key,
+            );
+            await tx.store.delete(fullKey);
+            await tx.done;
+        } finally {
+            release();
+        }
     },
 
     /**
@@ -209,18 +293,25 @@ export const database = {
      * @returns An array of repo-scoped keys.
      */
     async keys(store: string): Promise<IDBValidKey[]> {
-        _validateStore(store);
-        const db = await this.getDB();
-        const tx = db.transaction(store, "readonly");
-        const allKeys = await tx.store.getAllKeys();
-        await tx.done;
-        return allKeys
-            .filter(
-                (k) =>
-                    typeof k === "string" &&
-                    k.startsWith(`${this.activeRepo}::`),
-            )
-            .map((k) => _stripPrefix(this.activeRepo, k));
+        const release = await _mutex.acquire();
+        try {
+            _validateStore(store);
+            const db = await this.getDB();
+            const tx = db.transaction(store, "readonly");
+            const allKeys = await tx.store.getAllKeys();
+            await tx.done;
+            return allKeys
+                .filter(
+                    (k) =>
+                        typeof k === "string" &&
+                        k.startsWith(`${this.activeRepo}::`),
+                )
+                .map((k) =>
+                    _stripPrefix(this.activeRepo, this.activeBranch, k),
+                );
+        } finally {
+            release();
+        }
     },
 
     /**
@@ -228,19 +319,24 @@ export const database = {
      * @param store - The store to clear.
      */
     async clear(store: string): Promise<void> {
-        _validateStore(store);
-        const db = await this.getDB();
-        const tx = db.transaction(store, "readwrite");
-        const allKeys = await tx.store.getAllKeys();
-        for (const key of allKeys) {
-            if (
-                typeof key === "string" &&
-                key.startsWith(`${this.activeRepo}::`)
-            ) {
-                await tx.store.delete(key);
+        const release = await _mutex.acquire();
+        try {
+            _validateStore(store);
+            const db = await this.getDB();
+            const tx = db.transaction(store, "readwrite");
+            const allKeys = await tx.store.getAllKeys();
+            for (const key of allKeys) {
+                if (
+                    typeof key === "string" &&
+                    key.startsWith(`${this.activeRepo}::${this.activeBranch}::`)
+                ) {
+                    await tx.store.delete(key);
+                }
             }
+            await tx.done;
+        } finally {
+            release();
         }
-        await tx.done;
     },
 
     /**
@@ -250,13 +346,22 @@ export const database = {
      * @returns True if the key exists, false otherwise.
      */
     async has(store: string, key: IDBValidKey): Promise<boolean> {
-        _validateStore(store);
-        const db = await this.getDB();
-        const tx = db.transaction(store, "readonly");
-        const fullKey = _makePrefixedKey(this.activeRepo, key);
-        const exists = (await tx.store.getKey(fullKey)) !== undefined;
-        await tx.done;
-        return exists;
+        const release = await _mutex.acquire();
+        try {
+            _validateStore(store);
+            const db = await this.getDB();
+            const tx = db.transaction(store, "readonly");
+            const fullKey = _makePrefixedKey(
+                this.activeRepo,
+                this.activeBranch,
+                key,
+            );
+            const exists = (await tx.store.getKey(fullKey)) !== undefined;
+            await tx.done;
+            return exists;
+        } finally {
+            release();
+        }
     },
 
     /**
@@ -264,12 +369,21 @@ export const database = {
      * @param options - Options to control reset behavior.
      * @param options.preserveRepo - If true, does not clear the active repo.
      */
-    async destroy({ preserveRepo = false } = {}): Promise<void> {
-        if (this.dbPromise) {
-            (await this.dbPromise).close();
-            this.dbPromise = null;
+    async destroy({
+        preserveRepo = false,
+        preserveBranch = false,
+    } = {}): Promise<void> {
+        const release = await _mutex.acquire();
+        try {
+            if (this.dbPromise) {
+                (await this.dbPromise).close();
+                this.dbPromise = null;
+            }
+            if (!preserveBranch) this.activeBranch = "";
+            if (!preserveRepo) this.activeRepo = "";
+            await indexedDB.deleteDatabase(config.name);
+        } finally {
+            release();
         }
-        if (!preserveRepo) this.activeRepo = "";
-        await indexedDB.deleteDatabase(config.name);
     },
 };
