@@ -282,7 +282,7 @@ export function prosemirrorToMarkdown(node: Node): string {
 }
 
 const MARK_PRECEDENCE: string[] = [
-    "link", 
+    "link",
     "strong",
     "emphasis",
     "underline",
