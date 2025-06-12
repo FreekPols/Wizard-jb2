@@ -33,8 +33,9 @@ import { unified } from "unified";
 import mystToMd from "myst-to-md";
 import { Aside, CaptionNumber } from "myst-spec-ext";
 
-
-type ChildrenOf<T extends MystNode> = T extends { children: infer C } ? C : never;
+type ChildrenOf<T extends MystNode> = T extends { children: infer C }
+    ? C
+    : never;
 
 type NodeName = typeof schema extends Schema<infer T> ? T : never;
 
@@ -46,11 +47,15 @@ const proseMirrorToMystHandlers = {
     code: (node: Node): Code => ({ type: "code", value: node.textContent }),
     root: (node: Node): Root => ({
         type: "root",
-        children: node.children.map((x) => proseMirrorToMyst(x)) as ChildrenOf<Root>,
+        children: node.children.map((x) =>
+            proseMirrorToMyst(x),
+        ) as ChildrenOf<Root>,
     }),
     block: (node: Node): Block => ({
         type: "block",
-        children: node.children.map((x) => proseMirrorToMyst(x)) as ChildrenOf<Block>,
+        children: node.children.map((x) =>
+            proseMirrorToMyst(x),
+        ) as ChildrenOf<Block>,
     }),
     paragraph: (node: Node): Paragraph => ({
         type: "paragraph",

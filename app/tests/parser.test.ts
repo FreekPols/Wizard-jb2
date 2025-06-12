@@ -1,13 +1,9 @@
 import { describe, expect, it } from "vitest";
-import {
-    parseMyst,
-} from "../src/lib/parser";
+import { parseMyst } from "../src/lib/parser";
 import { Node } from "prosemirror-model";
 import { schema } from "../src/lib/schema";
 import { EXAMPLE_1 } from "./parser_constants";
-import {
-    prosemirrorToMarkdown,
-} from "../src/lib/parser/to_markdown";
+import { prosemirrorToMarkdown } from "../src/lib/parser/to_markdown";
 
 describe("Markdown parser", () => {
     async function parse(myst: string) {
