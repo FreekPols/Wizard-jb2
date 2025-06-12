@@ -1,4 +1,4 @@
-import { FONT_OPTIONS, ACCENT } from "./toolbar_options";
+import { ACCENT } from "./toolbar_options";
 import {
   Component,
   createSignal,
@@ -7,6 +7,7 @@ import {
   For,
   JSX,
 } from "solid-js";
+import { showHintTooltip, hideHintTooltip } from "./HintTooltip";
 
 // --- Toolbar Button Component ---
 // Renders a single toolbar button with optional active/disabled state
@@ -16,6 +17,8 @@ export const ToolbarButton: Component<{
   onClick: () => void;
   active?: boolean;
   disabled?: boolean;
+  onMouseOver?: (e: MouseEvent) => void;
+  onMouseOut?: (e: MouseEvent) => void;
 }> = (props) => (
   <button
     type="button"
@@ -45,16 +48,8 @@ export const ToolbarButton: Component<{
     }}
     onMouseUp={(e) => (e.currentTarget as HTMLButtonElement).blur()}
     onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).blur()}
-    onMouseOver={(e) => {
-      if (!props.active) {
-        (e.currentTarget as HTMLButtonElement).style.background = ACCENT;
-      }
-    }}
-    onMouseOut={(e) => {
-      if (!props.active) {
-        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-      }
-    }}
+    onMouseOver={(e) => props.onMouseOver?.(e)}
+    onMouseOut={(e) => props.onMouseOut?.(e)}
   >
     <i class={`bi ${props.icon} fs-5`} />
     <span class="visually-hidden">{props.label}</span>
@@ -169,7 +164,7 @@ export const ToolbarDropdown: Component<{
 };
 
 // --- Toolbar Dropdown With Labels ---
-// Dropdown for options with custom labels (e.g., font, header), supports JSX labels
+// Dropdown for options with custom labels (header), supports JSX labels
 export const ToolbarDropdownWithLabels: Component<{
   icon: string;
   options: { label: JSX.Element | string; icon: string; onClick: () => void }[];
@@ -296,11 +291,6 @@ export const ToolbarDropdownWithLabels: Component<{
                 <span
                   style={{
                     "margin-left": "6px",
-                    // For font dropdown, preview the font
-                    "font-family":
-                      typeof opt.label === "string"
-                        ? FONT_OPTIONS.find((f) => f.label === opt.label)?.value
-                        : undefined,
                   }}
                 >
                   {opt.label}
@@ -324,5 +314,31 @@ export const ToolbarSeparator = () => (
       background: ACCENT,
       margin: "0 4px",
     }}
+  />
+);
+
+// --- Toolbar Hint Button ---
+// Button that shows usage hints on hover
+export const ToolbarHintButton: Component = () => (
+  <ToolbarButton
+    icon="bi-question-circle"
+    label=""
+    onClick={() => {}}
+    onMouseOver={(e) => {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      showHintTooltip(
+        [
+          "Ctrl + Enter: Exit table in new line",
+          "Ctrl + Enter: Exit quote/codeblock",
+          "Double click math: Edit inline",
+          "Ctrl + Backspace: Delete math equation",
+          "Ctrl + Backspace: Delete codeblock",
+        ].join("\n"),
+        rect.bottom + window.scrollY,
+        rect.left + window.scrollX + rect.width / 2,
+        false, // <--- do not show the black label
+      );
+    }}
+    onMouseOut={hideHintTooltip}
   />
 );

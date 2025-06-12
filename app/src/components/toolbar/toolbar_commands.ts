@@ -80,34 +80,6 @@ export function insertLink(url = "", title = "") {
     };
 }
 
-// --- FONT FAMILY COMMAND ---
-
-// Set font family mark for selection or cursor
-export function setFontFamily(family: string) {
-    return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
-        const { from, to, empty } = state.selection;
-        const markType: MarkType = schema.marks.fontFamily;
-        let tr = state.tr;
-
-        if (!empty) {
-            tr = tr.removeMark(from, to, markType);
-            tr = tr.addMark(from, to, markType.create({ family }));
-        } else {
-            const marks = markType.isInSet(
-                state.storedMarks || state.selection.$from.marks(),
-            )
-                ? (state.storedMarks || state.selection.$from.marks()).filter(
-                      (m) => m.type !== markType,
-                  )
-                : state.storedMarks || state.selection.$from.marks();
-            tr = tr.setStoredMarks([...marks, markType.create({ family })]);
-        }
-
-        if (dispatch) dispatch(tr);
-        return true;
-    };
-}
-
 // --- BLOCKQUOTE TOGGLE COMMAND ---
 
 // Toggle blockquote for selection (multi-paragraph)

@@ -2,7 +2,6 @@
 import { createSignal, JSX, Show } from "solid-js";
 import { useEditorState, useDispatchCommand } from "../Editor";
 import {
-  setFontFamily,
   setParagraph,
   setHeading,
   toggleBulletList,
@@ -16,7 +15,7 @@ import {
   ToolbarDropdownWithLabels,
   ToolbarDropdown,
 } from "./toolbar_components";
-import { FONT_OPTIONS, HEADER_OPTIONS } from "./toolbar_options";
+import { HEADER_OPTIONS } from "./toolbar_options";
 import { getCurrentListType } from "./toolbar_utils";
 
 // --- Signals for Table Grid Selector popup state and position ---
@@ -31,7 +30,6 @@ const [_selectorPos, setSelectorPos] = createSignal<{
 
 // --- Toolbar Dropdowns Object ---
 export const toolbarDropdowns: {
-  fontFamilyDropdown?: JSX.Element;
   headerDropdown?: JSX.Element;
   listDropdown?: JSX.Element;
   insertDropdown?: JSX.Element;
@@ -41,36 +39,6 @@ export const toolbarDropdowns: {
     // --- Accessors for editor state and command dispatcher ---
     const editorStateAccessor = useEditorState();
     const dispatchCommand = useDispatchCommand();
-
-    // --- Font Family Dropdown ---
-    this.fontFamilyDropdown = (
-      <ToolbarDropdownWithLabels
-        icon=""
-        title={(() => {
-          if (editorStateAccessor && editorStateAccessor()) {
-            const state = editorStateAccessor();
-            const marks = state.storedMarks || state.selection.$from.marks();
-            const fontMark = marks.find(
-              (mark) => mark.type.name === "fontFamily",
-            );
-            if (fontMark) {
-              const found = FONT_OPTIONS.find(
-                (f) => f.value === fontMark.attrs.family,
-              );
-              return found ? found.label : FONT_OPTIONS[0].label;
-            }
-          }
-          return FONT_OPTIONS[0].label;
-        })()}
-        options={FONT_OPTIONS.map((font) => ({
-          label: font.label,
-          icon: "",
-          onClick: () => {
-            dispatchCommand(setFontFamily(font.value));
-          },
-        }))}
-      />
-    );
 
     // --- Header (Paragraph/Heading) Dropdown ---
     this.headerDropdown = (

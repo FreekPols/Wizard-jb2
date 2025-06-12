@@ -496,31 +496,6 @@ export const schema = new Schema({
                 return ["u"];
             },
         },
-        fontSize: {
-            attrs: { size: {} },
-            parseDOM: [
-                { style: "font-size", getAttrs: (value) => ({ size: value }) },
-            ],
-            toDOM(node) {
-                return ["span", { style: `font-size: ${node.attrs.size}` }, 0];
-            },
-        },
-        fontFamily: {
-            attrs: { family: {} },
-            parseDOM: [
-                {
-                    style: "font-family",
-                    getAttrs: (value) => ({ family: value }),
-                },
-            ],
-            toDOM(node) {
-                return [
-                    "span",
-                    { style: `font-family: ${node.attrs.family}` },
-                    0,
-                ];
-            },
-        },
         strikethrough: {
             parseDOM: [
                 { tag: "s" },

@@ -6,6 +6,7 @@ import { ToolbarSeparator } from "./toolbar_components";
 import { toolbarButtons } from "./toolbar_buttons";
 import { toolbarDropdowns } from "./toolbar_dropdowns";
 import { GitHubDropdown } from "../github/GitHubDropdown";
+import { ToolbarHintButton } from "./toolbar_components";
 
 // --- Main Toolbar Component ---
 // The main toolbar with all formatting and insert controls
@@ -36,7 +37,6 @@ export const Toolbar: Component = () => {
       {toolbarButtons.superscriptButton}
       {toolbarButtons.subscriptButton}
       <ToolbarSeparator />
-      {toolbarDropdowns.fontFamilyDropdown}
       {toolbarDropdowns.headerDropdown}
       <ToolbarSeparator />
       {toolbarDropdowns.listDropdown}
@@ -46,6 +46,8 @@ export const Toolbar: Component = () => {
       {toolbarButtons.codeButton}
       <ToolbarSeparator />
       {toolbarDropdowns.insertDropdown}
+      <ToolbarSeparator />
+      <ToolbarHintButton />
       <GitHubDropdown />
     </div>
   );

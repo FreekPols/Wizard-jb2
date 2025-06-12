@@ -1,6 +1,7 @@
 import katex from "katex";
 import { NodeView, EditorView } from "prosemirror-view";
 import { Node as ProseMirrorNode } from "prosemirror-model";
+import { showHintTooltip, hideHintTooltip } from "./toolbar/HintTooltip";
 
 export class MathNodeView implements NodeView {
     dom: HTMLElement;
@@ -21,6 +22,17 @@ export class MathNodeView implements NodeView {
         this.dom.appendChild(this.renderSpan);
 
         this.renderMath(node.textContent);
+
+        this.renderSpan.addEventListener("mouseenter", (_e) => {
+            const rect = this.renderSpan.getBoundingClientRect();
+            showHintTooltip(
+                "Double click to edit inline\nCtrl + Backspace to delete",
+                rect.bottom + window.scrollY + 10,
+                rect.left + window.scrollX + rect.width / 2,
+                false,
+            );
+        });
+        this.renderSpan.addEventListener("mouseleave", hideHintTooltip);
 
         this.renderSpan.addEventListener("dblclick", () =>
             this.startEdit(node),

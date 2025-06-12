@@ -1,8 +1,7 @@
 body {
   margin: 0;
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    -apple-system, BlinkMacSystemFont, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -33,9 +32,9 @@ code {
   border-collapse: collapse;
   border: 1px solid #d7e1ff;
   background: #fff;
-  width: max-content;      /* Table only as wide as needed */
+  width: max-content;
   max-width: 100%;
-  table-layout: auto;      /* Let columns auto-size */
+  table-layout: auto;
 }
 
 .ProseMirror > table,
@@ -49,15 +48,15 @@ code {
   padding: 2px 6px;
   background: #f9f9fa;
   min-width: 60px;
-  white-space: pre-line;   /* Wrap only on newlines */
+  white-space: pre-line;
   word-break: break-word;
-  font-size: 14px;         /* Ensure consistent font size */
+  font-size: 14px;
 }
 
 .ProseMirror td p,
 .ProseMirror th p {
   margin: 0;
-  font-size: 14px; /* Ensure paragraphs in cells have the same font size */
+  font-size: 14px;
 }
 
 blockquote {
@@ -87,6 +86,12 @@ a {
 
 .dropdown-item:focus,
 .dropdown-item:hover {
+  background-color: #d7e1ff !important;
+  color: #1a237e !important;
+}
+
+.btn.btn-sm.px-1:hover,
+.btn.btn-sm.px-1:focus {
   background-color: #d7e1ff !important;
   color: #1a237e !important;
 }
