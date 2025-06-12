@@ -19,16 +19,21 @@ export const ToolbarButton: Component<{
 }> = (props) => (
   <button
     type="button"
-    class="btn btn-sm px-2"
+    class="btn btn-sm px-1"
     style={{
       background: props.active ? ACCENT : "transparent",
       color: props.active ? "#1a237e" : "#212529",
       transition: "background 0.1s, color 0.1s",
       "box-shadow": "none",
-      "margin-right": "2px",
-      "margin-bottom": "2px",
+      "margin-right": "1px",
+      "margin-bottom": "1px",
       border: "none",
       "border-radius": "4px",
+      height: "28px",
+      padding: "2px 4px",
+      display: "flex",
+      "align-items": "center",
+      "justify-content": "center",
     }}
     title={props.label}
     aria-pressed={props.active ? "true" : "false"}
@@ -64,7 +69,8 @@ export const ToolbarDropdown: Component<{
   title?: string;
   children?: JSX.Element;
   showTableSelector?: () => boolean;
-  setOpenRef?: (fn: (open: boolean) => void) => void; // <-- add this
+  setOpenRef?: (fn: (open: boolean) => void) => void;
+  setButtonRef?: (el: HTMLButtonElement) => void;
 }> = (props) => {
   const [open, setOpen] = createSignal(false);
 
@@ -98,7 +104,10 @@ export const ToolbarDropdown: Component<{
       style={{ display: "flex", "align-items": "center", position: "relative" }}
     >
       <button
-        ref={buttonRef}
+        ref={(el) => {
+          buttonRef = el;
+          props.setButtonRef?.(el);
+        }}
         type="button"
         class="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-center px-2"
         style={{
@@ -311,9 +320,9 @@ export const ToolbarSeparator = () => (
   <div
     style={{
       width: "1px",
-      height: "24px",
+      height: "18px",
       background: ACCENT,
-      margin: "0 8px",
+      margin: "0 4px",
     }}
   />
 );

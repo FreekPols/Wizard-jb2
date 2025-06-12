@@ -23,6 +23,8 @@ import { getCurrentListType } from "./toolbar_utils";
 const [showTableSelector, setShowTableSelector] = createSignal(false);
 const [hoverX, setHoverX] = createSignal(0);
 const [hoverY, setHoverY] = createSignal(0);
+let insertButtonRef: HTMLButtonElement | undefined;
+const [selectorPos, setSelectorPos] = createSignal<{ top: number; left: number }>({ top: 0, left: 0 });
 
 // --- Toolbar Dropdowns Object ---
 export const toolbarDropdowns: {
@@ -141,53 +143,59 @@ export const toolbarDropdowns: {
     // --- Insert Dropdown (Link, Image, Table, Equation) ---
 
     this.insertDropdown = (
-      <div>
-        <ToolbarDropdown
-          icon="bi-plus-lg"
-          options={[
-            {
-              label: "Insert Link",
-              icon: "bi-link-45deg",
-              onClick: () => {
-                const url = prompt("Enter link URL:");
-                if (!url) return;
-                const text = prompt("Enter link text (displayed):", url) || url;
-                dispatchCommand(insertLink(url, text));
-              },
+      <ToolbarDropdown
+        icon="bi-plus-lg"
+        options={[
+          {
+            label: "Insert Link",
+            icon: "bi-link-45deg",
+            onClick: () => {
+              const url = prompt("Enter link URL:");
+              if (!url) return;
+              const text = prompt("Enter link text (displayed):", url) || url;
+              dispatchCommand(insertLink(url, text));
             },
-            {
-              label: "Insert Image",
-              icon: "bi-image",
-              onClick: () => {
-                const url = prompt("Enter image URL:");
-                if (url) dispatchCommand(insertImage(url));
-              },
+          },
+          {
+            label: "Insert Image",
+            icon: "bi-image",
+            onClick: () => {
+              const url = prompt("Enter image URL:");
+              if (url) dispatchCommand(insertImage(url));
             },
-            {
-              label: "Insert Equation",
-              icon: "bi-calculator", // Use a valid Bootstrap icon
-              onClick: () => {
-                const equation = prompt("Enter LaTeX equation:", "E=mc^2");
-                if (equation !== null) dispatchCommand(insertMath(equation));
-              },
+          },
+          {
+            label: "Insert Equation",
+            icon: "bi-calculator", // Use a valid Bootstrap icon
+            onClick: () => {
+              const equation = prompt("Enter LaTeX equation:", "E=mc^2");
+              if (equation !== null) dispatchCommand(insertMath(equation));
             },
-            {
-              label: "Insert Table",
-              icon: "bi-table",
-              onClick: () => {
-                setShowTableSelector(true);
-              },
+          },
+          {
+            label: "Insert Table",
+            icon: "bi-table",
+            onClick: () => {
+              if (insertButtonRef) {
+                const rect = insertButtonRef.getBoundingClientRect();
+                setSelectorPos({
+                  top: rect.bottom + window.scrollY + 4, // 4px below the button
+                  left: rect.left + window.scrollX,
+                });
+              }
+              setShowTableSelector(true);
             },
-          ]}
-          title="Insert"
-        />
+          },
+        ]}
+        title="Insert"
+        setButtonRef={(el) => { insertButtonRef = el; }}
+      >
         <Show when={showTableSelector()}>
           <div
             style={{
-              position: "fixed",
-              top: "20%",
-              left: "45%",
-              transform: "translate(-50%, -50%)",
+              position: "absolute",
+              top: "100%", // Always just below the button
+              left: "0",
               background: "#fff",
               padding: "8px",
               border: "1px solid #d7e1ff",
@@ -253,7 +261,7 @@ export const toolbarDropdowns: {
             </div>
           </div>
         </Show>
-      </div>
+      </ToolbarDropdown>
     );
   },
 };

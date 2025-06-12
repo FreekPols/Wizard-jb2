@@ -20,7 +20,7 @@ export const Toolbar: Component = () => {
       class="d-flex align-items-center p-2 bg-light border-bottom flex-wrap"
       style={{
         position: "sticky",
-        top: 0,
+        top: "48px",
         "z-index": 100,
         background: "#fff",
       }}
