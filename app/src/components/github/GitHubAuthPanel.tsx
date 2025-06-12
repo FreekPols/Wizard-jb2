@@ -1,8 +1,7 @@
 import { Show, type Setter } from "solid-js";
 import { GitHubTokenInput } from "./GitHubTokenInput";
 import { GitHubUserPanel } from "./GitHubUserPanel";
-import type { GitHubUser } from "../../lib/github";
-import { useEditorView } from "../Editor";
+import type { GitHubUser } from "../../lib/github/GithubLogin";
 
 type Props = {
   token: string | null;
@@ -28,11 +27,8 @@ async function validateAndSetToken(
 }
 
 export const GitHubAuthPanel = (props: Props) => {
-  const view = useEditorView();
-  const getEditorContent = () => view?.()?.state.doc.textContent || "";
-
   return (
-    <div class="p-6">
+    <div class="p-6" style={{ "max-width": "235px", width: "100%" }}>
       <Show when={!props.token}>
         <GitHubTokenInput
           onTokenSet={(token) => validateAndSetToken(token, props.onTokenSet)}
@@ -44,7 +40,6 @@ export const GitHubAuthPanel = (props: Props) => {
             user={user}
             onLogout={props.onLogout}
             token={props.token ?? ""}
-            getEditorContent={getEditorContent}
           />
         )}
       </Show>

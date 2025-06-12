@@ -60,6 +60,10 @@ export const schema = new Schema({
         },
         definition: {
             group: "flowContent",
+            attrs: {
+                url: string({ optional: false }),
+                identifier: string({ optional: false }),
+            },
             toDOM() {
                 return ["div", { class: "definition" }, 0];
             },
@@ -108,7 +112,7 @@ export const schema = new Schema({
         list: {
             attrs: {
                 ordered: boolean({ default: false }),
-                start: integer({ default: 1 }),
+                start: integer({ default: undefined }),
                 spread: boolean({ default: false }),
             },
             group: "flowContent",
@@ -324,6 +328,24 @@ export const schema = new Schema({
             group: "phrasingContent",
             inline: true,
         },
+        // HACK: Prosemirror doesn't support mixed inline and non-inline content
+        imageWrapper: {
+            group: "flowContent",
+            content: "image",
+            toDOM(node) {
+                const img = node.children[0];
+                return [
+                    "img",
+                    {
+                        src: img.attrs.url,
+                        title: img.attrs.title,
+                        style: `width: ${img.attrs.width}`,
+                        alt: img.attrs.alt,
+                        class: img.attrs.class,
+                    },
+                ];
+            },
+        },
         image: {
             group: "phrasingContent",
             inline: true,
@@ -359,7 +381,7 @@ export const schema = new Schema({
             },
             attrs: {
                 class: string({ default: "" }),
-                width: string({ default: "50%" }), // <-- default to 50%
+                width: string(),
                 align: oneOf({
                     values: ["left", "right", "center"] as const,
                     default: "left",
@@ -368,6 +390,7 @@ export const schema = new Schema({
                 title: string({ default: "" }),
                 alt: string({ default: "" }),
                 reference: {
+                    default: null,
                     validate(value: unknown) {
                         return (
                             value === null ||

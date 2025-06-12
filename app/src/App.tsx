@@ -1,6 +1,7 @@
 import "katex/dist/katex.min.css";
 import { Editor } from "./components/Editor";
 import Toolbar from "./components/toolbar/toolbar";
+import { parseMyst } from "./lib/parser";
 import { schema } from "./lib/schema";
 import { HintTooltip } from "./components/toolbar/HintTooltip";
 //import "prosemirror-view/style/prosemirror.css";
@@ -11,12 +12,10 @@ import { HintTooltip } from "./components/toolbar/HintTooltip";
  * [SolidJS]: https://docs.solidjs.com
  */
 export default function App() {
-  const initialDocument = schema.node("root", undefined, [
-    schema.node("paragraph"),
-  ]);
+  const [initialDocument] = createResource(() => parseMyst(EXAMPLE_1));
   return (
     <>
-      <Editor schema={schema} initialDocument={initialDocument}>
+      <Editor schema={schema} initialDocument={initialDocument()}>
         <Toolbar />
       </Editor>
       <HintTooltip />
