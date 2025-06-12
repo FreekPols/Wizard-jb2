@@ -100,26 +100,29 @@ export function getFilePathFromHref(href: string | null): string | null {
 }
 
 /**
- * Returns a human-readable local time string with timezone, suitable for branch or commit names.
- * Example: 2024-06-06T16-23-45+02:00
+ * Fetches all branch names from a GitHub repository.
+ * @param href The repository URL (e.g. https://github.com/owner/repo)
+ * @param token (optional) GitHub token for private repos or higher rate limits
+ * @returns An array of branch names, or an empty array if none found
  */
-export function getLocalHumanTimeString(date: Date = new Date()): string {
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hour = pad(date.getHours());
-    const min = pad(date.getMinutes());
-    const sec = pad(date.getSeconds());
+export async function getAllBranchesFromHref(
+    href: string,
+    token?: string,
+): Promise<string[]> {
+    const repoInfo = parseOwnerRepoFromHref(href);
+    if (!repoInfo) return [];
+    const { owner, repo } = repoInfo;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/branches?per_page=100`;
+    const headers: Record<string, string> = {
+        Accept: "application/vnd.github.v3+json",
+    };
+    if (token) {
+        headers.Authorization = `token ${token}`;
+    }
 
-    // Timezone offset in minutes, e.g. +120 for UTC+2
-    const tzOffsetMin = date.getTimezoneOffset();
-    const tzSign = tzOffsetMin <= 0 ? "+" : "-";
-    const absOffset = Math.abs(tzOffsetMin);
-    const tzHour = pad(Math.floor(absOffset / 60));
-    const tzMin = pad(absOffset % 60);
-    const tzString = `${tzSign}${tzHour}:${tzMin}`;
-
-    // Example: 2024-06-06T16-23-45+02:00
-    return `${year}-${month}-${day}T${hour}-${min}-${sec}${tzString}`;
+    const resp = await fetch(apiUrl, { headers });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    // Each branch object has a 'name' property
+    return Array.isArray(data) ? data.map((b) => b.name) : [];
 }
