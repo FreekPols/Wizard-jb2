@@ -73,8 +73,8 @@ export const GitHubUserPanel = (props: Props) => {
 
     // Save the current editor content to the database before committing
     const filePathValue = filePath();
-    const content = window.__getEditorContent
-      ? window.__getEditorContent()
+    const content = window.__getEditorMarkdown
+      ? window.__getEditorMarkdown()
       : "";
 
     if (filePathValue && content && database.isInitialised()) {

@@ -38,7 +38,7 @@ window.addEventListener("beforeunload", async () => {
   const filePath = getFilePathFromHref(fileHref);
 
   // Get the editor content
-  const content = window.__getEditorContent ? window.__getEditorContent() : "";
+  const content = window.__getEditorMarkdown ? window.__getEditorMarkdown() : "";
 
   // Save to the database if possible
   if (filePath && content && (await database.isInitialised())) {
