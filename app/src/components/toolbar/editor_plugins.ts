@@ -1,4 +1,10 @@
-import { Plugin, Transaction, Selection, EditorState, NodeSelection } from "prosemirror-state";
+import {
+    Plugin,
+    Transaction,
+    Selection,
+    EditorState,
+    NodeSelection,
+} from "prosemirror-state";
 import { keymap } from "prosemirror-keymap";
 import {
     splitListItem,
@@ -6,8 +12,8 @@ import {
     liftListItem,
 } from "prosemirror-schema-list";
 import { Schema } from "prosemirror-model";
-import { TableMap, CellSelection } from "prosemirror-tables";
-import { chainCommands, exitCode } from "prosemirror-commands";
+import { TableMap } from "prosemirror-tables";
+import { chainCommands } from "prosemirror-commands";
 import { TextSelection } from "prosemirror-state";
 
 // When pressing Enter, the marks at the cursor are lost on the new line.
@@ -126,7 +132,7 @@ function deleteTable(): import("prosemirror-state").Command {
 
                     // After deletion, try to place the selection in a paragraph
                     let selPos = Math.min(pos, tr.doc.content.size - 1);
-                    let nodeAtSel = tr.doc.nodeAt(selPos);
+                    const nodeAtSel = tr.doc.nodeAt(selPos);
 
                     // If not a textblock, insert a paragraph
                     if (!nodeAtSel || !nodeAtSel.type.isTextblock) {
@@ -135,7 +141,9 @@ function deleteTable(): import("prosemirror-state").Command {
                         selPos++; // Move inside the new paragraph
                     }
 
-                    tr = tr.setSelection(Selection.near(tr.doc.resolve(selPos)));
+                    tr = tr.setSelection(
+                        Selection.near(tr.doc.resolve(selPos)),
+                    );
                     dispatch(tr.scrollIntoView());
                 }
                 return true;
@@ -147,15 +155,23 @@ function deleteTable(): import("prosemirror-state").Command {
             const nodeBefore = state.doc.nodeAt(beforePos);
             if (nodeBefore && nodeBefore.type.name === "table") {
                 if (dispatch) {
-                    let tr = state.tr.delete(beforePos, beforePos + nodeBefore.nodeSize);
-                    let selPos = Math.min(beforePos, tr.doc.content.size - 1);
-                    if (!tr.doc.nodeAt(selPos) || tr.doc.nodeAt(selPos)?.type.isTextblock === false) {
+                    let tr = state.tr.delete(
+                        beforePos,
+                        beforePos + nodeBefore.nodeSize,
+                    );
+                    const selPos = Math.min(beforePos, tr.doc.content.size - 1);
+                    if (
+                        !tr.doc.nodeAt(selPos) ||
+                        tr.doc.nodeAt(selPos)?.type.isTextblock === false
+                    ) {
                         const paragraph = state.schema.nodes.paragraph.create();
                         if (canInsertParagraph(tr, selPos)) {
                             tr = tr.insert(selPos, paragraph);
                         }
                     }
-                    tr = tr.setSelection(Selection.near(tr.doc.resolve(selPos)));
+                    tr = tr.setSelection(
+                        Selection.near(tr.doc.resolve(selPos)),
+                    );
                     dispatch(tr.scrollIntoView());
                 }
                 return true;
@@ -167,7 +183,9 @@ function deleteTable(): import("prosemirror-state").Command {
 
 function canInsertParagraph(stateOrTr: EditorState | Transaction, pos: number) {
     const $pos = stateOrTr.doc.resolve(pos);
-    const schema = (stateOrTr as EditorState).schema ?? (stateOrTr as Transaction).doc.type.schema;
+    const schema =
+        (stateOrTr as EditorState).schema ??
+        (stateOrTr as Transaction).doc.type.schema;
     for (let d = $pos.depth; d >= 0; d--) {
         const index = $pos.index(d);
         const parent = $pos.node(d);
@@ -181,7 +199,6 @@ function canInsertParagraph(stateOrTr: EditorState | Transaction, pos: number) {
     return false;
 }
 
-
 export function tableAndCodeExitKeymap(schema: Schema) {
     return keymap({
         "Shift-Enter": (state, dispatch) => {
@@ -189,213 +206,265 @@ export function tableAndCodeExitKeymap(schema: Schema) {
                 dispatch(
                     state.tr
                         .replaceSelectionWith(schema.nodes.hard_break.create())
-                        .scrollIntoView()
+                        .scrollIntoView(),
                 );
             }
             return true;
         },
-        "Mod-Enter": chainCommands(
-            (state, dispatch) => {
-                if (inLastTableCell(state)) {
-                    return insertParagraphAfterTable()(state, dispatch);
-                }
-                if (state.selection.$from.parent.type.name === "code") {
-                    return insertParagraphAfterCodeBlock()(state, dispatch);
-                }
-                return false;
+        "Mod-Enter": chainCommands((state, dispatch) => {
+            if (inLastTableCell(state)) {
+                return insertParagraphAfterTable()(state, dispatch);
             }
-        ),
+            if (state.selection.$from.parent.type.name === "code") {
+                return insertParagraphAfterCodeBlock()(state, dispatch);
+            }
+            return false;
+        }),
     });
 }
 
 export function tableDeleteKeymap() {
-  return keymap({
-    "Mod-Backspace": deleteTable(),
-    "Mod-Delete": deleteTable(),
-  });
+    return keymap({
+        "Mod-Backspace": deleteTable(),
+        "Mod-Delete": deleteTable(),
+    });
 }
 
 export function mathDeleteKeymap(schema: Schema) {
-  return keymap({
-    "Mod-Backspace": (state, dispatch) => {
-      const { $from } = state.selection;
-      for (let d = $from.depth; d > 0; d--) {
-        const node = $from.node(d);
-        if (node.type === schema.nodes.math) {
-          const pos = $from.before(d);
-          if (dispatch) {
-            let tr = state.tr.setSelection(NodeSelection.create(state.doc, pos));
-            tr = tr.deleteSelection();
-            dispatch(tr.scrollIntoView());
-          }
-          return true;
-        }
-      }
-      return false;
-    },
-    "Mod-Delete": (state, dispatch) => {
-      const { $from } = state.selection;
-      for (let d = $from.depth; d > 0; d--) {
-        const node = $from.node(d);
-        if (node.type === schema.nodes.math) {
-          const pos = $from.before(d);
-          if (dispatch) {
-            let tr = state.tr.setSelection(NodeSelection.create(state.doc, pos));
-            tr = tr.deleteSelection();
-            dispatch(tr.scrollIntoView());
-          }
-          return true;
-        }
-      }
-      return false;
-    }
-  });
+    return keymap({
+        "Mod-Backspace": (state, dispatch) => {
+            const { $from } = state.selection;
+            for (let d = $from.depth; d > 0; d--) {
+                const node = $from.node(d);
+                if (node.type === schema.nodes.math) {
+                    const pos = $from.before(d);
+                    if (dispatch) {
+                        let tr = state.tr.setSelection(
+                            NodeSelection.create(state.doc, pos),
+                        );
+                        tr = tr.deleteSelection();
+                        dispatch(tr.scrollIntoView());
+                    }
+                    return true;
+                }
+            }
+            return false;
+        },
+        "Mod-Delete": (state, dispatch) => {
+            const { $from } = state.selection;
+            for (let d = $from.depth; d > 0; d--) {
+                const node = $from.node(d);
+                if (node.type === schema.nodes.math) {
+                    const pos = $from.before(d);
+                    if (dispatch) {
+                        let tr = state.tr.setSelection(
+                            NodeSelection.create(state.doc, pos),
+                        );
+                        tr = tr.deleteSelection();
+                        dispatch(tr.scrollIntoView());
+                    }
+                    return true;
+                }
+            }
+            return false;
+        },
+    });
 }
 
 export function codeBlockKeymap(schema: Schema) {
-  return keymap({
-    "Shift-Enter": (state, dispatch) => {
-      const { $from } = state.selection;
-      for (let d = $from.depth; d > 0; d--) {
-        if ($from.node(d).type === schema.nodes.code) {
-          if (dispatch) {
-            dispatch(
-              state.tr
-                .replaceSelectionWith(schema.nodes.hard_break.create())
-                .scrollIntoView()
-            );
-          }
-          return true;
-        }
-      }
-      return false;
-    },
-    "Tab": (state, dispatch) => {
-      const { $from, $to } = state.selection;
-      for (let d = $from.depth; d > 0; d--) {
-        if ($from.node(d).type === schema.nodes.code) {
-          if (dispatch) {
-            let tr = state.tr;
-            if (state.selection.empty) {
-              tr = tr.insertText("  ");
-            } else {
-              const start = $from.pos;
-              const end = $to.pos;
-              let text = state.doc.textBetween(start, end, "\n");
-              text = text.replace(/^/gm, "  ");
-              tr = tr.replaceSelectionWith(state.schema.text(text));
-              tr = tr.setSelection(TextSelection.create(tr.doc, start, start + text.length));
+    return keymap({
+        "Shift-Enter": (state, dispatch) => {
+            const { $from } = state.selection;
+            for (let d = $from.depth; d > 0; d--) {
+                if ($from.node(d).type === schema.nodes.code) {
+                    if (dispatch) {
+                        dispatch(
+                            state.tr
+                                .replaceSelectionWith(
+                                    schema.nodes.hard_break.create(),
+                                )
+                                .scrollIntoView(),
+                        );
+                    }
+                    return true;
+                }
             }
-            dispatch(tr.scrollIntoView());
-          }
-          return true;
-        }
-      }
-      return false;
-    },
-    "Shift-Tab": (state, dispatch) => {
-      const { $from, $to } = state.selection;
-      for (let d = $from.depth; d > 0; d--) {
-        if ($from.node(d).type === schema.nodes.code) {
-          if (dispatch) {
-            let tr = state.tr;
-            const start = $from.pos;
-            const end = $to.pos;
-            let text = state.doc.textBetween(start, end, "\n");
-            text = text.replace(/^ {1,2}/gm, "");
-            tr = tr.replaceSelectionWith(state.schema.text(text));
-            tr = tr.setSelection(TextSelection.create(tr.doc, start, start + text.length));
-            dispatch(tr.scrollIntoView());
-          }
-          return true;
-        }
-      }
-      return false;
-    },
-    "(": autoClosePair("(", ")", schema),
-    "[": autoClosePair("[", "]", schema),
-    "{": autoClosePair("{", "}", schema),
-    "\"": autoClosePair("\"", "\"", schema),
-    "'": autoClosePair("'", "'", schema),
-    "`": autoClosePair("`", "`", schema),
-  });
+            return false;
+        },
+        Tab: (state, dispatch) => {
+            const { $from, $to } = state.selection;
+            for (let d = $from.depth; d > 0; d--) {
+                if ($from.node(d).type === schema.nodes.code) {
+                    if (dispatch) {
+                        let tr = state.tr;
+                        if (state.selection.empty) {
+                            tr = tr.insertText("  ");
+                        } else {
+                            const start = $from.pos;
+                            const end = $to.pos;
+                            let text = state.doc.textBetween(start, end, "\n");
+                            text = text.replace(/^/gm, "  ");
+                            tr = tr.replaceSelectionWith(
+                                state.schema.text(text),
+                            );
+                            tr = tr.setSelection(
+                                TextSelection.create(
+                                    tr.doc,
+                                    start,
+                                    start + text.length,
+                                ),
+                            );
+                        }
+                        dispatch(tr.scrollIntoView());
+                    }
+                    return true;
+                }
+            }
+            return false;
+        },
+        "Shift-Tab": (state, dispatch) => {
+            const { $from, $to } = state.selection;
+            for (let d = $from.depth; d > 0; d--) {
+                if ($from.node(d).type === schema.nodes.code) {
+                    if (dispatch) {
+                        let tr = state.tr;
+                        const start = $from.pos;
+                        const end = $to.pos;
+                        let text = state.doc.textBetween(start, end, "\n");
+                        text = text.replace(/^ {1,2}/gm, "");
+                        tr = tr.replaceSelectionWith(state.schema.text(text));
+                        tr = tr.setSelection(
+                            TextSelection.create(
+                                tr.doc,
+                                start,
+                                start + text.length,
+                            ),
+                        );
+                        dispatch(tr.scrollIntoView());
+                    }
+                    return true;
+                }
+            }
+            return false;
+        },
+        "(": autoClosePair("(", ")", schema),
+        "[": autoClosePair("[", "]", schema),
+        "{": autoClosePair("{", "}", schema),
+        '"': autoClosePair('"', '"', schema),
+        "'": autoClosePair("'", "'", schema),
+        "`": autoClosePair("`", "`", schema),
+    });
 }
 
 function autoClosePair(open: string, close: string, schema: Schema) {
-  return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
-    const { $from } = state.selection;
-    for (let d = $from.depth; d > 0; d--) {
-      if ($from.node(d).type === schema.nodes.code) {
-        if (dispatch) {
-          const tr = state.tr.insertText(open + close);
-          // Move cursor between the pair
-          const pos = state.selection.from + 1;
-          dispatch(tr.setSelection(TextSelection.create(tr.doc, pos)));
+    return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+        const { $from } = state.selection;
+        for (let d = $from.depth; d > 0; d--) {
+            if ($from.node(d).type === schema.nodes.code) {
+                if (dispatch) {
+                    const tr = state.tr.insertText(open + close);
+                    // Move cursor between the pair
+                    const pos = state.selection.from + 1;
+                    dispatch(
+                        tr.setSelection(TextSelection.create(tr.doc, pos)),
+                    );
+                }
+                return true;
+            }
         }
-        return true;
-      }
-    }
-    return false;
-  };
+        return false;
+    };
 }
 
 export function tableAfterDeleteKeymap(schema: Schema) {
-  return keymap({
-    "Mod-Backspace": (state, dispatch) => {
-      const { $from } = state.selection;
-      if (!state.selection.empty) return false;
-      if ($from.parent.type !== schema.nodes.paragraph) return false;
-      const parentDepth = $from.depth - 1;
-      if (parentDepth < 1) return false;
-      const indexBefore = $from.index(parentDepth);
-      if (indexBefore === 0) return false;
-      const beforePos = $from.before(parentDepth);
-      const nodeBefore = state.doc.nodeAt(beforePos);
-      if (nodeBefore && nodeBefore.type.name === "table") {
-        if (dispatch) {
-          let tr = state.tr.delete(beforePos, beforePos + nodeBefore.nodeSize);
-          // Ensure a paragraph remains for the cursor
-          let insertPos = beforePos;
-          if (!tr.doc.nodeAt(insertPos) || !tr.doc.nodeAt(insertPos)?.type.isTextblock) {
-            tr = tr.insert(insertPos, schema.nodes.paragraph.create());
-          }
-          const selPos = Math.min(insertPos, tr.doc.content.size - 1);
-          tr = tr.setSelection(Selection.near(tr.doc.resolve(selPos)));
-          dispatch(tr.scrollIntoView());
-        }
-        return true;
-      }
-      // Prevent default join with table
-      if (indexBefore > 0 && nodeBefore && nodeBefore.type.name === "table") return true;
-      // Otherwise, allow default
-      return false;
-    },
-    "Backspace": (state, dispatch) => {
-      // Same as above, for plain Backspace
-      const { $from } = state.selection;
-      if (!state.selection.empty) return false;
-      if ($from.parent.type !== schema.nodes.paragraph) return false;
-      const parentDepth = $from.depth - 1;
-      if (parentDepth < 1) return false;
-      const indexBefore = $from.index(parentDepth);
-      if (indexBefore === 0) return false;
-      const beforePos = $from.before(parentDepth);
-      const nodeBefore = state.doc.nodeAt(beforePos);
-      if (nodeBefore && nodeBefore.type.name === "table") {
-        if (dispatch) {
-          let tr = state.tr.delete(beforePos, beforePos + nodeBefore.nodeSize);
-          let insertPos = beforePos;
-          if (!tr.doc.nodeAt(insertPos) || !tr.doc.nodeAt(insertPos)?.type.isTextblock) {
-            tr = tr.insert(insertPos, schema.nodes.paragraph.create());
-          }
-          const selPos = Math.min(insertPos, tr.doc.content.size - 1);
-          tr = tr.setSelection(Selection.near(tr.doc.resolve(selPos)));
-          dispatch(tr.scrollIntoView());
-        }
-        return true;
-      }
-      if (indexBefore > 0 && nodeBefore && nodeBefore.type.name === "table") return true;
-      return false;
-    }
-  });
+    return keymap({
+        "Mod-Backspace": (state, dispatch) => {
+            const { $from } = state.selection;
+            if (!state.selection.empty) return false;
+            if ($from.parent.type !== schema.nodes.paragraph) return false;
+            const parentDepth = $from.depth - 1;
+            if (parentDepth < 1) return false;
+            const indexBefore = $from.index(parentDepth);
+            if (indexBefore === 0) return false;
+            const beforePos = $from.before(parentDepth);
+            const nodeBefore = state.doc.nodeAt(beforePos);
+            if (nodeBefore && nodeBefore.type.name === "table") {
+                if (dispatch) {
+                    let tr = state.tr.delete(
+                        beforePos,
+                        beforePos + nodeBefore.nodeSize,
+                    );
+                    // Ensure a paragraph remains for the cursor
+                    const insertPos = beforePos;
+                    if (
+                        !tr.doc.nodeAt(insertPos) ||
+                        !tr.doc.nodeAt(insertPos)?.type.isTextblock
+                    ) {
+                        tr = tr.insert(
+                            insertPos,
+                            schema.nodes.paragraph.create(),
+                        );
+                    }
+                    const selPos = Math.min(insertPos, tr.doc.content.size - 1);
+                    tr = tr.setSelection(
+                        Selection.near(tr.doc.resolve(selPos)),
+                    );
+                    dispatch(tr.scrollIntoView());
+                }
+                return true;
+            }
+            // Prevent default join with table
+            if (
+                indexBefore > 0 &&
+                nodeBefore &&
+                nodeBefore.type.name === "table"
+            )
+                return true;
+            // Otherwise, allow default
+            return false;
+        },
+        Backspace: (state, dispatch) => {
+            // Same as above, for plain Backspace
+            const { $from } = state.selection;
+            if (!state.selection.empty) return false;
+            if ($from.parent.type !== schema.nodes.paragraph) return false;
+            const parentDepth = $from.depth - 1;
+            if (parentDepth < 1) return false;
+            const indexBefore = $from.index(parentDepth);
+            if (indexBefore === 0) return false;
+            const beforePos = $from.before(parentDepth);
+            const nodeBefore = state.doc.nodeAt(beforePos);
+            if (nodeBefore && nodeBefore.type.name === "table") {
+                if (dispatch) {
+                    let tr = state.tr.delete(
+                        beforePos,
+                        beforePos + nodeBefore.nodeSize,
+                    );
+                    const insertPos = beforePos;
+                    if (
+                        !tr.doc.nodeAt(insertPos) ||
+                        !tr.doc.nodeAt(insertPos)?.type.isTextblock
+                    ) {
+                        tr = tr.insert(
+                            insertPos,
+                            schema.nodes.paragraph.create(),
+                        );
+                    }
+                    const selPos = Math.min(insertPos, tr.doc.content.size - 1);
+                    tr = tr.setSelection(
+                        Selection.near(tr.doc.resolve(selPos)),
+                    );
+                    dispatch(tr.scrollIntoView());
+                }
+                return true;
+            }
+            if (
+                indexBefore > 0 &&
+                nodeBefore &&
+                nodeBefore.type.name === "table"
+            )
+                return true;
+            return false;
+        },
+    });
 }

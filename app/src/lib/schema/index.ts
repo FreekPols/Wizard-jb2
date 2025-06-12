@@ -483,8 +483,8 @@ export const schema = new Schema({
                 return [
                     "a",
                     {
-                    href: mark.attrs.url,
-                    title: mark.attrs.url,
+                        href: mark.attrs.url,
+                        title: mark.attrs.url,
                     },
                     mark.attrs.title || mark.attrs.url,
                 ];

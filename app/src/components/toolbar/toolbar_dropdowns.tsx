@@ -24,7 +24,10 @@ const [showTableSelector, setShowTableSelector] = createSignal(false);
 const [hoverX, setHoverX] = createSignal(0);
 const [hoverY, setHoverY] = createSignal(0);
 let insertButtonRef: HTMLButtonElement | undefined;
-const [selectorPos, setSelectorPos] = createSignal<{ top: number; left: number }>({ top: 0, left: 0 });
+const [_selectorPos, setSelectorPos] = createSignal<{
+  top: number;
+  left: number;
+}>({ top: 0, left: 0 });
 
 // --- Toolbar Dropdowns Object ---
 export const toolbarDropdowns: {
@@ -179,7 +182,7 @@ export const toolbarDropdowns: {
               if (insertButtonRef) {
                 const rect = insertButtonRef.getBoundingClientRect();
                 setSelectorPos({
-                  top: rect.bottom + window.scrollY + 4, // 4px below the button
+                  top: rect.bottom + window.scrollY + 4,
                   left: rect.left + window.scrollX,
                 });
               }
@@ -188,13 +191,15 @@ export const toolbarDropdowns: {
           },
         ]}
         title="Insert"
-        setButtonRef={(el) => { insertButtonRef = el; }}
+        setButtonRef={(el) => {
+          insertButtonRef = el;
+        }}
       >
         <Show when={showTableSelector()}>
           <div
             style={{
               position: "absolute",
-              top: "100%", // Always just below the button
+              top: "100%",
               left: "0",
               background: "#fff",
               padding: "8px",

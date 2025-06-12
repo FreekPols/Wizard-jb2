@@ -7,7 +7,7 @@ import {
 } from "prosemirror-commands";
 import { schema } from "../../lib/schema";
 import { EditorState, Transaction } from "prosemirror-state";
-import { MarkType, Schema } from "prosemirror-model";
+import { MarkType, Schema, NodeType } from "prosemirror-model";
 import {
     wrapInList,
     liftListItem,
@@ -343,28 +343,31 @@ export function toggleOrderedList(schema: Schema) {
 }
 
 // Helper: check if any listItem is in the selection
-function selectionHasList(state: EditorState, listItemType: any) {
-  let found = false;
-  state.doc.nodesBetween(state.selection.from, state.selection.to, (node) => {
-    if (node.type === listItemType) found = true;
-  });
-  return found;
+function selectionHasList(state: EditorState, listItemType: NodeType) {
+    let found = false;
+    state.doc.nodesBetween(state.selection.from, state.selection.to, (node) => {
+        if (node.type === listItemType) found = true;
+    });
+    return found;
 }
 
 // Helper: lift all listItems in selection
-function liftListItems(state: EditorState, dispatch?: (tr: Transaction) => void) {
-  const { tr, selection, schema } = state;
-  let modified = false;
-  state.doc.nodesBetween(selection.from, selection.to, (node, pos, parent, index) => {
-    if (node.type === schema.nodes.listItem) {
-      const $pos = tr.doc.resolve(tr.mapping.map(pos));
-      const range = $pos.blockRange();
-      if (range) {
-        tr.lift(range, 0);
-        modified = true;
-      }
-    }
-  });
-  if (modified && dispatch) dispatch(tr.scrollIntoView());
-  return modified;
+function liftListItems(
+    state: EditorState,
+    dispatch?: (tr: Transaction) => void,
+) {
+    const { tr, selection, schema } = state;
+    let modified = false;
+    state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+        if (node.type === schema.nodes.listItem) {
+            const $pos = tr.doc.resolve(tr.mapping.map(pos));
+            const range = $pos.blockRange();
+            if (range) {
+                tr.lift(range, 0);
+                modified = true;
+            }
+        }
+    });
+    if (modified && dispatch) dispatch(tr.scrollIntoView());
+    return modified;
 }
