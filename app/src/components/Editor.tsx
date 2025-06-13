@@ -1,6 +1,7 @@
 import {
   Accessor,
   createContext,
+  createEffect,
   createMemo,
   createSignal,
   onCleanup,
@@ -142,11 +143,21 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
       try {
         return prosemirrorToMarkdown(doc);
       } catch (e) {
-        return e.toString() + " " + doc.textContent;
+        return (
+          (e instanceof Error ? e.toString() : String(e)) +
+          " " +
+          doc.textContent
+        );
       }
     };
 
     // Load the current file into the editor on mount
+    loadCurrentFileIntoEditor();
+  });
+
+  // Add this effect to reload file when branch changes
+  createEffect(() => {
+    currentBranch(); // Track the signal
     loadCurrentFileIntoEditor();
   });
 
@@ -158,6 +169,7 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
 
     // Try to load markdown content from the database for the current branch/repo
     let markdown = await database.load<string>("markdown", filePath);
+    console.log("Loaded markdown:", markdown);
 
     // If not found or empty, try to fetch from GitHub
     if (!markdown) {
@@ -196,6 +208,8 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
       doc,
       plugins: editorView.state.plugins,
     });
+
+    console.log("New doc created:", newState.doc);
 
     // Set the new state
     editorView.updateState(newState);
