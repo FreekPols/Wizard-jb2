@@ -10,6 +10,7 @@ import {
   getFilePathFromHref,
 } from "./lib/github/GithubUtility";
 import { database } from "./lib/localStorage/database";
+import { currentBranch } from "./lib/github/BranchSignal";
 
 const root = document.getElementById("root");
 
@@ -26,7 +27,7 @@ getCurrentFileHref();
 //initialise database
 if (ref != null) {
   database.setActiveRepo(ref);
-  database.setActiveBranch("localBranchName"); //TODO this needs to be selected by the user
+  database.setActiveBranch(currentBranch()); // Use the signal here
   console.info("Database initialised.");
 } else {
   console.warn("Database not initialised - no github repo link found.");
@@ -38,7 +39,9 @@ window.addEventListener("beforeunload", async () => {
   const filePath = getFilePathFromHref(fileHref);
 
   // Get the editor content
-  const content = window.__getEditorContent ? window.__getEditorContent() : "";
+  const content = window.__getEditorMarkdown
+    ? window.__getEditorMarkdown()
+    : "";
 
   // Save to the database if possible
   if (filePath && content && (await database.isInitialised())) {

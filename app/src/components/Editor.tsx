@@ -1,6 +1,7 @@
 import {
   Accessor,
   createContext,
+  createEffect,
   createMemo,
   createSignal,
   onCleanup,
@@ -9,27 +10,37 @@ import {
   untrack,
   useContext,
 } from "solid-js";
-import type { Node, Schema } from "prosemirror-model";
+import type { Schema } from "prosemirror-model";
 import { Command, EditorState, Plugin } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { keymap } from "prosemirror-keymap";
 import { history, redo, undo } from "prosemirror-history";
 import { baseKeymap } from "prosemirror-commands";
+import { currentBranch } from "../lib/github/BranchSignal";
+import {
+  currentFileHref,
+  getFilePathFromHref,
+  repositoryHref,
+  parseOwnerRepoFromHref,
+  getFileContentFromRepo,
+} from "../lib/github/GithubUtility";
+import { database } from "../lib/localStorage/database";
+import { parseMyst } from "../lib/parser";
+import { prosemirrorToMarkdown } from "../lib/parser/to_markdown";
+import { ImageNodeView } from "./ImageNodeView";
+import { MathNodeView } from "./MathNodeView";
 import {
   customListKeymap,
-  preserveMarksPlugin,
   tableAndCodeExitKeymap,
-  mathDeleteKeymap,
   codeBlockKeymap,
+  mathDeleteKeymap,
   tableAfterDeleteKeymap,
+  preserveMarksPlugin,
 } from "./toolbar/editor_plugins";
-import { MathNodeView } from "./MathNodeView";
-import { ImageNodeView } from "./ImageNodeView";
 import { tableEditing } from "prosemirror-tables";
 
 export interface EditorProps {
   schema: Schema;
-  initialDocument?: Node;
 }
 
 const editorContext = createContext<{
@@ -39,6 +50,10 @@ const editorContext = createContext<{
 
 export function useEditorState() {
   return useContext(editorContext)?.state;
+}
+
+export function useEditorView() {
+  return useContext(editorContext)?.view;
 }
 
 export function useCommand(cmd: Command) {
@@ -81,7 +96,6 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
   const editorState = createMemo(() =>
     EditorState.create({
       schema: props.schema,
-      doc: props.initialDocument,
       plugins: [
         history(),
         customListKeymap(props.schema),
@@ -160,9 +174,84 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
       }
     });
 
-    // Expose a function to get the editor content globally
-    window.__getEditorContent = () => state().doc.textContent; //Don't think this is the best practice
+    // Expose a function to get the editor content as markdown globally
+    window.__getEditorMarkdown = () => {
+      const doc = state().doc;
+      try {
+        return prosemirrorToMarkdown(doc);
+      } catch (e) {
+        return (
+          (e instanceof Error ? e.toString() : String(e)) +
+          " " +
+          doc.textContent
+        );
+      }
+    };
+
+    // Load the current file into the editor on mount
+    loadCurrentFileIntoEditor();
   });
+
+  // Add this effect to reload file when branch changes
+  createEffect(() => {
+    currentBranch(); // Track the signal
+    loadCurrentFileIntoEditor();
+  });
+
+  // Add this method to load and parse the current file into the editor
+  async function loadCurrentFileIntoEditor() {
+    const fileHref = currentFileHref();
+    const filePath = getFilePathFromHref(fileHref);
+    if (!filePath) return;
+
+    // Try to load markdown content from the database for the current branch/repo
+    let markdown = await database.load<string>("markdown", filePath);
+    console.log("Loaded markdown:", markdown);
+
+    // If not found or empty, try to fetch from GitHub
+    if (!markdown) {
+      const repoHref = repositoryHref();
+      const repoInfo = parseOwnerRepoFromHref(repoHref);
+      const branch = currentBranch(); // Use the signal here
+
+      if (repoInfo && branch) {
+        // Try to fetch from the current branch first (and fallback to default branch inside getFileContentFromRepo)
+        let markdownTemp = await getFileContentFromRepo(
+          repoInfo.owner,
+          repoInfo.repo,
+          branch,
+          filePath,
+        );
+        if (markdownTemp == null) markdownTemp = undefined;
+        markdown = markdownTemp;
+      }
+    }
+
+    if (!markdown) return;
+
+    // Parse markdown into a ProseMirror Node
+    const doc = await parseMyst(markdown);
+
+    // Debugging
+    // console.log("Markdown: \n" + markdown)
+    // console.log("Parsed: \n" + doc)
+
+    // Get the current view instance
+    const editorView = view();
+
+    // Create new state
+    const newState = EditorState.create({
+      schema: editorView.state.schema,
+      doc,
+      plugins: editorView.state.plugins,
+    });
+
+    console.log("New doc created:", newState.doc);
+
+    // Set the new state
+    editorView.updateState(newState);
+    setState(newState);
+  }
 
   return (
     <>
@@ -174,6 +263,8 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
   );
 };
 
-export function useEditorView() {
-  return useContext(editorContext)?.view;
+// Optionally export for use elsewhere
+export async function loadCurrentFileIntoEditor() {
+  // This function can be imported and called from outside if needed
+  // (see above for implementation)
 }

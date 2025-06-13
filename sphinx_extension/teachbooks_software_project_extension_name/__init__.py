@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from sphinx.application import Sphinx
-from sphinx.util.typing import ExtensionMetadata
 
 
 def extension_name_static_path(app):
@@ -17,7 +16,7 @@ def extension_name_static_path(app):
     app.config.html_static_path.append(str(_static_path))
 
 
-def setup(app: Sphinx) -> ExtensionMetadata:
+def setup(app: Sphinx):
     # Register the _static folder
     app.connect("builder-inited", extension_name_static_path)
 

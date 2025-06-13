@@ -320,6 +320,8 @@ const handlers = {
             { kind: node.kind, class: node.class },
             children(node, defs),
         ),
+
+    default: (node: Text) => schema.text(node.value),
 };
 
 function transformAst(
@@ -329,16 +331,17 @@ function transformAst(
     // TODO: Maybe add some kind of fallback here for unsupported types. This
     // might not be necessary, because the core specification should remain
     // pretty stable, and we only parse directives that we know we can handle.
-    if (!(myst.type in handlers)) {
-        console.log(myst);
-        throw new RangeError(`Unknown node type '${myst.type}'`);
-    }
     const handler = (
         handlers as unknown as Record<
             string,
             (node: MystNode, definitions: DefinitionMap) => Node
         >
     )[myst.type];
+    if (!(myst.type in handlers)) {
+        // FIXME: Handle this better
+        console.warn(`Unknown node type '${myst.type}'`);
+        return [];
+    }
     return handler(myst, definitions);
 }
 

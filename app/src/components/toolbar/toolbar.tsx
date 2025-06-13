@@ -7,6 +7,7 @@ import { toolbarButtons } from "./toolbar_buttons";
 import { toolbarDropdowns } from "./toolbar_dropdowns";
 import { GitHubDropdown } from "../github/GitHubDropdown";
 import { ToolbarHintButton } from "./toolbar_components";
+import { BranchDropdown } from "../github/BranchDropdown";
 
 // --- Main Toolbar Component ---
 // The main toolbar with all formatting and insert controls
@@ -48,7 +49,10 @@ export const Toolbar: Component = () => {
       {toolbarDropdowns.insertDropdown}
       <ToolbarSeparator />
       <ToolbarHintButton />
-      <GitHubDropdown />
+      <div class="ms-auto d-flex align-items-right">
+        <BranchDropdown />
+        <GitHubDropdown />
+      </div>
     </div>
   );
 };

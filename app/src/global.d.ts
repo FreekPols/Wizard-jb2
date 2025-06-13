@@ -1,6 +1,6 @@
 declare global {
     interface Window {
-        __getEditorContent?: () => string;
+        __getEditorMarkdown?: () => string;
     }
 }
 export {};
