@@ -320,8 +320,8 @@ const handlers = {
             { kind: node.kind, class: node.class },
             children(node, defs),
         ),
-        
-    default: (node: Text) => schema.text(node.value)
+
+    default: (node: Text) => schema.text(node.value),
 };
 
 function transformAst(
