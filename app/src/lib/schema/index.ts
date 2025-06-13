@@ -1,21 +1,7 @@
 /* @refresh reload */
 import { Schema, Mark } from "prosemirror-model";
-
 import { boolean, integer, oneOf, string } from "./utils";
 
-// NOTE: Schema partially based on [prosemirror-markdown][1].
-// Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
-// Licensed under the MIT (Expat) License; SPDX identifier: MIT.
-//
-// [1]: https://github.com/ProseMirror/prosemirror-markdown/blob/master/src/schema.ts
-
-/** Prosemirror schema
- *
- * This is the schema used by prosemirror to determine the structure of the document.
- * This must match the MyST AST closely, to ensure we create a ~1:1 mapping.
- *
- * More info: https://prosemirror.net/docs/guide/#schema
- */
 export const schema = new Schema({
     nodes: {
         root: {
@@ -39,9 +25,7 @@ export const schema = new Schema({
             group: "flowContent",
             content: "phrasingContent*",
             marks: "_",
-            attrs: {
-                align: { default: "left" },
-            },
+            attrs: { align: { default: "left" } },
             parseDOM: [
                 {
                     tag: "p",
@@ -242,6 +226,7 @@ export const schema = new Schema({
                         "seealso",
                         "tip",
                         "warning",
+                        "topic", // <-- add "topic" if needed
                     ] as const,
                 }),
                 class: string(),
@@ -279,11 +264,43 @@ export const schema = new Schema({
             content: "text*",
         },
         table: {
-            group: "flowContent",
+            group: "block flowContent",
+            content: "table_row+",
+            tableRole: "table",
+            isolating: true,
             toDOM() {
-                // TODO: Table rendering
-                return ["table", 0];
+                return ["table", ["tbody", 0]];
             },
+            parseDOM: [{ tag: "table" }],
+        },
+        table_row: {
+            content: "table_cell+",
+            tableRole: "row",
+            toDOM() {
+                return ["tr", 0];
+            },
+            parseDOM: [{ tag: "tr" }],
+        },
+        table_cell: {
+            content: "block+",
+            attrs: { style: { default: null } },
+            tableRole: "cell",
+            isolating: true,
+            toDOM(node) {
+                return [
+                    "td",
+                    node.attrs.style ? { style: node.attrs.style } : {},
+                    0,
+                ];
+            },
+            parseDOM: [
+                {
+                    tag: "td",
+                    getAttrs: (node) => ({
+                        style: (node as HTMLElement).getAttribute("style"),
+                    }),
+                },
+            ],
         },
         footnoteDefinition: {
             group: "flowContent",
@@ -296,7 +313,6 @@ export const schema = new Schema({
             group: "phrasingContent",
             inline: true,
         },
-        // HACK: Prosemirror doesn't support mixed inline and non-inline content
         imageWrapper: {
             group: "flowContent",
             content: "image",
@@ -407,7 +423,12 @@ export const schema = new Schema({
             toDOM(node) {
                 return [
                     "aside",
-                    { class: node.attrs.class + " aside-" + node.attrs.kind },
+                    {
+                        class:
+                            (node.attrs.class || "") +
+                            " aside-" +
+                            node.attrs.kind,
+                    },
                     0,
                 ];
             },
@@ -498,13 +519,7 @@ export const schema = new Schema({
                                 "referenceType" in value &&
                                 typeof (value as { referenceType?: unknown })
                                     .referenceType === "string" &&
-                                (
-                                    [
-                                        "shortcut",
-                                        "collapsed",
-                                        "full",
-                                    ] as string[]
-                                ).includes(
+                                ["shortcut", "collapsed", "full"].includes(
                                     (value as { referenceType: string })
                                         .referenceType,
                                 ))
@@ -527,31 +542,6 @@ export const schema = new Schema({
             parseDOM: [{ tag: "u" }, { style: "text-decoration=underline" }],
             toDOM() {
                 return ["u"];
-            },
-        },
-        fontSize: {
-            attrs: { size: {} },
-            parseDOM: [
-                { style: "font-size", getAttrs: (value) => ({ size: value }) },
-            ],
-            toDOM(node) {
-                return ["span", { style: `font-size: ${node.attrs.size}` }, 0];
-            },
-        },
-        fontFamily: {
-            attrs: { family: {} },
-            parseDOM: [
-                {
-                    style: "font-family",
-                    getAttrs: (value) => ({ family: value }),
-                },
-            ],
-            toDOM(node) {
-                return [
-                    "span",
-                    { style: `font-family: ${node.attrs.family}` },
-                    0,
-                ];
             },
         },
         strikethrough: {

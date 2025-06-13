@@ -1,5 +1,4 @@
-import { FONT_OPTIONS, ACCENT } from "./toolbar_options";
-
+import { ACCENT } from "./toolbar_options";
 import {
   Component,
   createSignal,
@@ -8,6 +7,7 @@ import {
   For,
   JSX,
 } from "solid-js";
+import { showHintTooltip, hideHintTooltip } from "./HintTooltip";
 
 // --- Toolbar Button Component ---
 // Renders a single toolbar button with optional active/disabled state
@@ -17,19 +17,26 @@ export const ToolbarButton: Component<{
   onClick: () => void;
   active?: boolean;
   disabled?: boolean;
+  onMouseOver?: (e: MouseEvent) => void;
+  onMouseOut?: (e: MouseEvent) => void;
 }> = (props) => (
   <button
     type="button"
-    class="btn btn-sm px-2"
+    class="btn btn-sm px-1"
     style={{
       background: props.active ? ACCENT : "transparent",
       color: props.active ? "#1a237e" : "#212529",
       transition: "background 0.1s, color 0.1s",
       "box-shadow": "none",
-      "margin-right": "2px",
-      "margin-bottom": "2px",
+      "margin-right": "1px",
+      "margin-bottom": "1px",
       border: "none",
       "border-radius": "4px",
+      height: "28px",
+      padding: "2px 4px",
+      display: "flex",
+      "align-items": "center",
+      "justify-content": "center",
     }}
     title={props.label}
     aria-pressed={props.active ? "true" : "false"}
@@ -41,16 +48,8 @@ export const ToolbarButton: Component<{
     }}
     onMouseUp={(e) => (e.currentTarget as HTMLButtonElement).blur()}
     onMouseLeave={(e) => (e.currentTarget as HTMLButtonElement).blur()}
-    onMouseOver={(e) => {
-      if (!props.active) {
-        (e.currentTarget as HTMLButtonElement).style.background = ACCENT;
-      }
-    }}
-    onMouseOut={(e) => {
-      if (!props.active) {
-        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-      }
-    }}
+    onMouseOver={(e) => props.onMouseOver?.(e)}
+    onMouseOut={(e) => props.onMouseOut?.(e)}
   >
     <i class={`bi ${props.icon} fs-5`} />
     <span class="visually-hidden">{props.label}</span>
@@ -63,13 +62,21 @@ export const ToolbarDropdown: Component<{
   icon: string;
   options: { label: string; icon: string; onClick: () => void }[];
   title?: string;
+  children?: JSX.Element;
+  showTableSelector?: () => boolean;
+  setOpenRef?: (fn: (open: boolean) => void) => void;
+  setButtonRef?: (el: HTMLButtonElement) => void;
 }> = (props) => {
   const [open, setOpen] = createSignal(false);
+
   let buttonRef: HTMLButtonElement | undefined;
   let menuRef: HTMLUListElement | undefined;
 
   // Close dropdown when clicking outside
   onMount(() => {
+    // Expose setOpen to parent
+    if (props.setOpenRef) props.setOpenRef(setOpen);
+
     const handler = (e: MouseEvent) => {
       if (
         open() &&
@@ -89,13 +96,13 @@ export const ToolbarDropdown: Component<{
   return (
     <div
       class="dropdown mx-1"
-      style={{
-        display: "flex",
-        "align-items": "center",
-      }}
+      style={{ display: "flex", "align-items": "center", position: "relative" }}
     >
       <button
-        ref={buttonRef}
+        ref={(el) => {
+          buttonRef = el;
+          props.setButtonRef?.(el);
+        }}
         type="button"
         class="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-center px-2"
         style={{
@@ -125,7 +132,12 @@ export const ToolbarDropdown: Component<{
         ref={menuRef}
         class="dropdown-menu p-0"
         classList={{ show: open() }}
-        style={{ "min-width": "40px", top: "100%", left: "0" }}
+        style={{
+          "min-width": "40px",
+          top: "100%",
+          left: "0",
+          ...(props.showTableSelector?.() && { pointerEvents: "none" }),
+        }}
       >
         <For each={props.options}>
           {(opt) => (
@@ -146,12 +158,13 @@ export const ToolbarDropdown: Component<{
           )}
         </For>
       </ul>
+      {props.children}
     </div>
   );
 };
 
 // --- Toolbar Dropdown With Labels ---
-// Dropdown for options with custom labels (e.g., font, header), supports JSX labels
+// Dropdown for options with custom labels (header), supports JSX labels
 export const ToolbarDropdownWithLabels: Component<{
   icon: string;
   options: { label: JSX.Element | string; icon: string; onClick: () => void }[];
@@ -238,7 +251,11 @@ export const ToolbarDropdownWithLabels: Component<{
         ref={menuRef}
         class="dropdown-menu p-0"
         classList={{ show: open() }}
-        style={{ "min-width": "40px", top: "100%", left: "0" }}
+        style={{
+          "min-width": "40px",
+          top: "100%",
+          left: "0",
+        }}
       >
         <For each={props.options}>
           {(opt) => (
@@ -274,11 +291,6 @@ export const ToolbarDropdownWithLabels: Component<{
                 <span
                   style={{
                     "margin-left": "6px",
-                    // For font dropdown, preview the font
-                    "font-family":
-                      typeof opt.label === "string"
-                        ? FONT_OPTIONS.find((f) => f.label === opt.label)?.value
-                        : undefined,
                   }}
                 >
                   {opt.label}
@@ -298,65 +310,35 @@ export const ToolbarSeparator = () => (
   <div
     style={{
       width: "1px",
-      height: "24px",
+      height: "18px",
       background: ACCENT,
-      margin: "0 8px",
+      margin: "0 4px",
     }}
   />
 );
 
-// --- Table Grid Selector Component ---
-// A component for selecting a table grid size (rows x cols)
-export function TableGridSelector(props: {
-  maxRows?: number;
-  maxCols?: number;
-  onSelect: (rows: number, cols: number) => void;
-  onClose: () => void;
-}) {
-  const [hovered, setHovered] = createSignal<[number, number]>([0, 0]);
-
-  return (
-    <div
-      style={{
-        border: "1px solid #ccc",
-        background: "#fff",
-        padding: "8px",
-        "box-shadow": "0 2px 8px rgba(0,0,0,0.15)",
-        position: "absolute",
-        "z-index": 1000,
-      }}
-      onMouseLeave={() => props.onClose()}
-    >
-      <div>
-        <For each={Array.from({ length: props.maxRows ?? 8 })}>
-          {(_, row) => (
-            <div style={{ display: "flex" }}>
-              <For each={Array.from({ length: props.maxCols ?? 8 })}>
-                {(_, col) => {
-                  const selected =
-                    row() <= hovered()[0] && col() <= hovered()[1];
-                  return (
-                    <div
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        border: "1px solid #ccc",
-                        background: selected ? "#D7E1FF" : "#fff",
-                        cursor: "pointer",
-                      }}
-                      onMouseEnter={() => setHovered([row(), col()])}
-                      onClick={() => props.onSelect(row() + 1, col() + 1)}
-                    />
-                  );
-                }}
-              </For>
-            </div>
-          )}
-        </For>
-      </div>
-      <div style={{ "margin-top": "8px", "text-align": "center" }}>
-        {hovered()[0] + 1} × {hovered()[1] + 1}
-      </div>
-    </div>
-  );
-}
+// --- Toolbar Hint Button ---
+// Button that shows usage hints on hover
+export const ToolbarHintButton: Component = () => (
+  <ToolbarButton
+    icon="bi-question-circle"
+    label=""
+    onClick={() => {}}
+    onMouseOver={(e) => {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      showHintTooltip(
+        [
+          "Ctrl + Enter: Exit table in new line",
+          "Ctrl + Enter: Exit quote/codeblock",
+          "Double click math: Edit inline",
+          "Ctrl + Backspace: Delete math equation",
+          "Ctrl + Backspace: Delete codeblock",
+        ].join("\n"),
+        rect.bottom + window.scrollY,
+        rect.left + window.scrollX + rect.width / 2,
+        false, // <--- do not show the black label
+      );
+    }}
+    onMouseOut={hideHintTooltip}
+  />
+);
