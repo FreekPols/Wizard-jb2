@@ -1,21 +1,7 @@
 /* @refresh reload */
 import { Schema, Mark } from "prosemirror-model";
-
 import { boolean, integer, oneOf, string } from "./utils";
 
-// NOTE: Schema partially based on [prosemirror-markdown][1].
-// Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
-// Licensed under the MIT (Expat) License; SPDX identifier: MIT.
-//
-// [1]: https://github.com/ProseMirror/prosemirror-markdown/blob/master/src/schema.ts
-
-/** Prosemirror schema
- *
- * This is the schema used by prosemirror to determine the structure of the document.
- * This must match the MyST AST closely, to ensure we create a ~1:1 mapping.
- *
- * More info: https://prosemirror.net/docs/guide/#schema
- */
 export const schema = new Schema({
     nodes: {
         root: {
@@ -39,9 +25,7 @@ export const schema = new Schema({
             group: "flowContent",
             content: "phrasingContent*",
             marks: "_",
-            attrs: {
-                align: { default: "left" },
-            },
+            attrs: { align: { default: "left" } },
             parseDOM: [
                 {
                     tag: "p",
@@ -89,7 +73,7 @@ export const schema = new Schema({
                 { tag: "h5", attrs: { level: 5 } },
                 { tag: "h6", attrs: { level: 6 } },
             ],
-            group: "block flowContent",
+            group: "flowContent",
             toDOM(node) {
                 const { level, align } = node.attrs;
                 return [`h${level}`, { style: `text-align: ${align}` }, 0];
@@ -103,7 +87,7 @@ export const schema = new Schema({
             },
         },
         blockquote: {
-            group: "block flowContent",
+            group: "flowContent",
             content: "flowContent+",
             toDOM() {
                 return ["blockquote", 0];
@@ -242,6 +226,7 @@ export const schema = new Schema({
                         "seealso",
                         "tip",
                         "warning",
+                        "topic", // <-- add "topic" if needed
                     ] as const,
                 }),
                 class: string(),
@@ -328,7 +313,6 @@ export const schema = new Schema({
             group: "phrasingContent",
             inline: true,
         },
-        // HACK: Prosemirror doesn't support mixed inline and non-inline content
         imageWrapper: {
             group: "flowContent",
             content: "image",
@@ -426,13 +410,50 @@ export const schema = new Schema({
             },
             parseDOM: [{ tag: "br" }],
         },
-        hard_break: {
-            group: "phrasingContent",
-            inline: true,
-            selectable: false,
-            parseDOM: [{ tag: "br" }],
+        aside: {
+            group: "flowContent",
+            content: "admonitionTitle? flowContent*",
+            attrs: {
+                kind: oneOf({
+                    values: ["sidebar", "margin", "topic"] as const,
+                    optional: true,
+                }),
+                class: string({ optional: true }),
+            },
+            toDOM(node) {
+                return [
+                    "aside",
+                    {
+                        class:
+                            (node.attrs.class || "") +
+                            " aside-" +
+                            node.attrs.kind,
+                    },
+                    0,
+                ];
+            },
+        },
+        caption: {
+            group: "flowContent",
+            content: "flowContent",
             toDOM() {
-                return ["br"];
+                return ["p", { class: "caption" }, 0];
+            },
+        },
+        captionNumber: {
+            group: "phrasingContent",
+            content: "phrasingContent+",
+            inline: true,
+            atom: true,
+            toDOM(node) {
+                const captionKind =
+                    node.attrs.kind?.charAt(0).toUpperCase() +
+                    node.attrs.kind?.slice(1);
+                return [
+                    "span",
+                    { class: "caption-number" },
+                    `${captionKind} ${node.textContent}`,
+                ];
             },
         },
     },
@@ -486,30 +507,34 @@ export const schema = new Schema({
         },
         link: {
             attrs: {
-                url: {},
-                title: { default: "" },
-                reference: { default: null },
-            },
-            inclusive: false,
-            parseDOM: [
-                {
-                    tag: "a[href]",
-                    getAttrs(dom: HTMLElement) {
-                        return {
-                            url: dom.getAttribute("href"),
-                            title: dom.textContent || "",
-                        };
+                url: string(),
+                title: string({ optional: true }),
+                reference: {
+                    default: null,
+                    validate(value: unknown) {
+                        return (
+                            value === null ||
+                            (typeof value === "object" &&
+                                value !== null &&
+                                "referenceType" in value &&
+                                typeof (value as { referenceType?: unknown })
+                                    .referenceType === "string" &&
+                                ["shortcut", "collapsed", "full"].includes(
+                                    (value as { referenceType: string })
+                                        .referenceType,
+                                ))
+                        );
                     },
                 },
-            ],
-            toDOM(mark) {
+            },
+            toDOM(node) {
                 return [
                     "a",
                     {
-                        href: mark.attrs.url,
-                        title: mark.attrs.url,
+                        href: node.attrs.url,
+                        title: node.attrs.title,
                     },
-                    mark.attrs.title || mark.attrs.url,
+                    0,
                 ];
             },
         },
