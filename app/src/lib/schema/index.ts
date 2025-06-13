@@ -148,7 +148,7 @@ export const schema = new Schema({
             },
             content: "phrasingContent*",
         },
-        code: {
+        code_block: {
             attrs: {
                 lang: string({ default: "text" }),
                 meta: string({ optional: true }),
@@ -491,6 +491,13 @@ export const schema = new Schema({
             ],
             toDOM() {
                 return ["strong"];
+            },
+        },
+        // Inline code
+        code: {
+            parseDOM: [{ tag: "code" }],
+            toDOM() {
+                return ["code"];
             },
         },
         subscript: {

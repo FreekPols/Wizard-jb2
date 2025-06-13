@@ -219,7 +219,7 @@ const handlers = {
     html: (node: HTML) => schema.node("html", { value: node.value }),
     code: (node: Code) =>
         schema.node(
-            "code",
+            "code_block",
             pick(
                 node,
                 "lang",
@@ -232,6 +232,8 @@ const handlers = {
             ),
             schema.text(node.value),
         ),
+    inlineCode: (node: { value: string }) =>
+        schema.text(node.value, [schema.mark("code")]),
     mystTarget: (node: Target) =>
         schema.node("target", { label: node.label?.trim()?.toLowerCase() }),
     mystDirective: (node: Directive, defs: DefinitionMap) =>
@@ -338,9 +340,30 @@ function transformAst(
         >
     )[myst.type];
     if (!(myst.type in handlers)) {
-        // FIXME: Handle this better
         console.warn(`Unknown node type '${myst.type}'`);
-        return [];
+        // console.log("Unsupported Debug: " + myst.data)
+        let nodeContent: String;
+        // Transform unsupported node to text
+        if (myst.data) {
+            nodeContent = JSON.stringify(myst.data, null, 2);
+        } else {
+            nodeContent = "Directive not supported and no text content found"
+        }
+
+        console.log(nodeContent)
+
+        // TODO: Fix this
+        // We return a ProseMirror `code_block` node.
+        // return schema.node(
+        //     "code_block",
+        //     // We set the language to 'json' for nice syntax highlighting
+        //     // and add a 'meta' attribute for clarity.
+        //     { lang: "json", meta: `Unsupported node: ${myst.type}` },
+        //     // The found text
+        //     schema.text(nodeContent),
+        // );
+
+        return []
     }
     return handler(myst, definitions);
 }
