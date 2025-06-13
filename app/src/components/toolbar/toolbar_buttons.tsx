@@ -90,7 +90,7 @@ export const toolbarButtons: {
             },
           );
         }
-        setFormatMarks(null); // Reset painter after applying
+        setFormatMarks(null);
       }
     }
 
@@ -173,14 +173,12 @@ export const toolbarButtons: {
           : false,
     });
     this.indentButton = buttonValuesToJSXElement({
-      //TODO indents do not work
       icon: "bi-caret-right",
       label: "Increase Indent",
       onClick: () => dispatchCommand(increaseIndent()),
       active: () => undefined,
     });
     this.outdentButton = buttonValuesToJSXElement({
-      //TODO indents do not work
       icon: "bi-caret-left",
       label: "Decrease Indent",
       onClick: () => dispatchCommand(decreaseIndent()),

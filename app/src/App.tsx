@@ -1,6 +1,8 @@
+import "katex/dist/katex.min.css";
 import { Editor } from "./components/Editor";
 import Toolbar from "./components/toolbar/toolbar";
 import { schema } from "./lib/schema";
+import { HintTooltip } from "./components/toolbar/HintTooltip";
 //import "prosemirror-view/style/prosemirror.css";
 
 /** The [SolidJS] application. This is mounted to the DOM by the `render()` function.
@@ -9,12 +11,12 @@ import { schema } from "./lib/schema";
  * [SolidJS]: https://docs.solidjs.com
  */
 export default function App() {
-  // const [initialDocument] = createResource(() => parseMyst(EXAMPLE_1));
   return (
     <>
       <Editor schema={schema}>
         <Toolbar />
       </Editor>
+      <HintTooltip />
     </>
   );
 }

@@ -6,7 +6,7 @@ import { ToolbarSeparator } from "./toolbar_components";
 import { toolbarButtons } from "./toolbar_buttons";
 import { toolbarDropdowns } from "./toolbar_dropdowns";
 import { GitHubDropdown } from "../github/GitHubDropdown";
-import { BranchDropdown } from "../github/BranchDropdown";
+import { ToolbarHintButton } from "./toolbar_components";
 
 // --- Main Toolbar Component ---
 // The main toolbar with all formatting and insert controls
@@ -21,7 +21,7 @@ export const Toolbar: Component = () => {
       class="d-flex align-items-center p-2 bg-light border-bottom flex-wrap"
       style={{
         position: "sticky",
-        top: 0,
+        top: "48px",
         "z-index": 100,
         background: "#fff",
       }}
@@ -37,7 +37,6 @@ export const Toolbar: Component = () => {
       {toolbarButtons.superscriptButton}
       {toolbarButtons.subscriptButton}
       <ToolbarSeparator />
-      {toolbarDropdowns.fontFamilyDropdown}
       {toolbarDropdowns.headerDropdown}
       <ToolbarSeparator />
       {toolbarDropdowns.listDropdown}
@@ -47,10 +46,9 @@ export const Toolbar: Component = () => {
       {toolbarButtons.codeButton}
       <ToolbarSeparator />
       {toolbarDropdowns.insertDropdown}
-      <div class="d-flex align-items-center ms-auto">
-        <BranchDropdown />
-        <GitHubDropdown />
-      </div>
+      <ToolbarSeparator />
+      <ToolbarHintButton />
+      <GitHubDropdown />
     </div>
   );
 };

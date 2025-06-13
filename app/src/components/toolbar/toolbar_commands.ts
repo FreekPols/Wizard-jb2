@@ -1,13 +1,18 @@
-import { lift, toggleMark, wrapIn, setBlockType } from "prosemirror-commands";
+import {
+    lift,
+    toggleMark,
+    wrapIn,
+    setBlockType,
+    autoJoin,
+} from "prosemirror-commands";
 import { schema } from "../../lib/schema";
 import { EditorState, Transaction } from "prosemirror-state";
-import { MarkType } from "prosemirror-model";
+import { MarkType, Schema, NodeType } from "prosemirror-model";
 import {
-    sinkListItem,
-    liftListItem,
     wrapInList,
+    liftListItem,
+    sinkListItem,
 } from "prosemirror-schema-list";
-
 // --- MARK COMMANDS ---
 
 // Toggle strong/bold mark
@@ -59,12 +64,11 @@ export function insertLink(url = "", title = "") {
         let tr = state.tr;
 
         if (empty) {
-            // Optionally, insert placeholder text and apply link
-            const text = state.schema.text(url);
-            tr = tr.insert(from, text);
+            const textNode = state.schema.text(title || url);
+            tr = tr.insert(from, textNode);
             tr = tr.addMark(
                 from,
-                from + url.length,
+                from + (title || url).length,
                 markType.create({ url, title, reference: null }),
             );
         } else {
@@ -72,34 +76,6 @@ export function insertLink(url = "", title = "") {
         }
 
         if (dispatch) dispatch(tr.scrollIntoView());
-        return true;
-    };
-}
-
-// --- FONT FAMILY COMMAND ---
-
-// Set font family mark for selection or cursor
-export function setFontFamily(family: string) {
-    return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
-        const { from, to, empty } = state.selection;
-        const markType: MarkType = schema.marks.fontFamily;
-        let tr = state.tr;
-
-        if (!empty) {
-            tr = tr.removeMark(from, to, markType);
-            tr = tr.addMark(from, to, markType.create({ family }));
-        } else {
-            const marks = markType.isInSet(
-                state.storedMarks || state.selection.$from.marks(),
-            )
-                ? (state.storedMarks || state.selection.$from.marks()).filter(
-                      (m) => m.type !== markType,
-                  )
-                : state.storedMarks || state.selection.$from.marks();
-            tr = tr.setStoredMarks([...marks, markType.create({ family })]);
-        }
-
-        if (dispatch) dispatch(tr);
         return true;
     };
 }
@@ -222,25 +198,36 @@ export function setParagraph() {
 }
 
 // --- TABLE COMMAND ---
-
 // Insert a table with the given number of rows and columns
 export function insertTable(rows: number, cols: number) {
     return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
-        const { schema } = state; // removed 'selection'
-        // Create a simple table: each row is a paragraph block
+        const { schema } = state;
+        const { table, table_row, table_cell, paragraph } = schema.nodes;
+
         const rowNodes = [];
+
         for (let r = 0; r < rows; r++) {
             const cellNodes = [];
             for (let c = 0; c < cols; c++) {
-                cellNodes.push(schema.nodes.paragraph.create());
+                const cellContent = paragraph.create();
+                cellNodes.push(table_cell.create(null, cellContent));
             }
-            // For now, just use a block for each row (adjust if you add table_row/cell nodes)
-            rowNodes.push(...cellNodes);
+            rowNodes.push(table_row.create(null, cellNodes));
         }
-        const table = schema.nodes.table.create(null, rowNodes);
+
+        const tableNode = table.create(null, rowNodes);
+        const before = paragraph.create();
+        const after = paragraph.create();
+
+        const content = state.schema.nodes.root
+            ? state.schema.nodes.root.create(null, [before, tableNode, after])
+            : state.schema.nodes.doc.create(null, [before, tableNode, after]);
+
         if (dispatch) {
-            dispatch(state.tr.replaceSelectionWith(table).scrollIntoView());
+            const tr = state.tr.replaceSelectionWith(content).scrollIntoView();
+            dispatch(tr);
         }
+
         return true;
     };
 }
@@ -260,4 +247,99 @@ export function insertMath(equation: string = "") {
         }
         return true;
     };
+}
+
+// Helper: check if selection is in a list and what type
+function getListType(state: EditorState): boolean | null {
+    const { $from } = state.selection;
+    for (let d = $from.depth; d > 0; d--) {
+        const node = $from.node(d);
+        if (node.type.name === "list") {
+            return node.attrs.ordered; // true for ordered, false for bullet
+        }
+    }
+    return null;
+}
+
+// Toggle bullet list
+export function toggleBulletList(schema: Schema) {
+    return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+        const { listItem, list } = schema.nodes;
+        if (selectionHasList(state, listItem)) {
+            // Remove all lists in selection
+            return liftListItems(state, dispatch) || false;
+        } else {
+            // Wrap all blocks in a bullet list and auto-join adjacent lists
+            return autoJoin(
+                wrapInList(list, { ordered: false }),
+                (before, after) =>
+                    before.type === after.type &&
+                    before.type === list &&
+                    before.attrs.ordered === after.attrs.ordered,
+            )(state, dispatch);
+        }
+    };
+}
+
+// Toggle ordered list
+export function toggleOrderedList(schema: Schema) {
+    return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+        const listType = getListType(state);
+        if (listType === true) {
+            // Already in ordered list: remove
+            return liftListItem(schema.nodes.listItem)(state, dispatch);
+        } else if (listType === false) {
+            // In bullet list: lift out, then wrap as ordered
+            if (dispatch) {
+                liftListItem(schema.nodes.listItem)(state, dispatch);
+                autoJoin(
+                    wrapInList(schema.nodes.list, { ordered: true }),
+                    (before, after) =>
+                        before.type === after.type &&
+                        before.type === schema.nodes.list &&
+                        before.attrs.ordered === after.attrs.ordered,
+                )(state, dispatch);
+            }
+            return true;
+        } else {
+            // Not in a list: wrap as ordered
+            return autoJoin(
+                wrapInList(schema.nodes.list, { ordered: true }),
+                (before, after) =>
+                    before.type === after.type &&
+                    before.type === schema.nodes.list &&
+                    before.attrs.ordered === after.attrs.ordered,
+            )(state, dispatch);
+        }
+    };
+}
+
+// Helper: check if any listItem is in the selection
+function selectionHasList(state: EditorState, listItemType: NodeType) {
+    let found = false;
+    state.doc.nodesBetween(state.selection.from, state.selection.to, (node) => {
+        if (node.type === listItemType) found = true;
+    });
+    return found;
+}
+
+// Helper: lift all listItems in selection
+function liftListItems(
+    state: EditorState,
+    dispatch?: (tr: Transaction) => void,
+) {
+    const { tr, selection, schema } = state;
+    let modified = false;
+    state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+        if (node.type === schema.nodes.listItem) {
+            const $pos = tr.doc.resolve(tr.mapping.map(pos));
+            const range = $pos.blockRange();
+            if (range) {
+                tr.lift(range, 0);
+                modified = true;
+            }
+        }
+    });
+    if (modified && dispatch) dispatch(tr.scrollIntoView());
+    return modified;
 }

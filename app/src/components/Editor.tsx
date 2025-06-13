@@ -18,17 +18,6 @@ import { history, redo, undo } from "prosemirror-history";
 import { baseKeymap } from "prosemirror-commands";
 import { sinkListItem, liftListItem } from "prosemirror-schema-list";
 import { preserveMarksPlugin } from "../lib/editor_plugins";
-import { prosemirrorToMarkdown } from "../lib/parser/to_markdown";
-import { parseMyst } from "../lib/parser/index";
-import { database } from "../lib/localStorage/database";
-import { currentBranch } from "../lib/github/BranchSignal";
-import {
-  getFilePathFromHref,
-  currentFileHref,
-  getFileContentFromRepo,
-  repositoryHref,
-  parseOwnerRepoFromHref,
-} from "../lib/github/GithubUtility";
 
 export interface EditorProps {
   schema: Schema;
@@ -89,15 +78,19 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
       schema: props.schema,
       plugins: [
         history(),
+        customListKeymap(props.schema),
+        preserveMarksPlugin(),
+        tableAndCodeExitKeymap(props.schema),
+        codeBlockKeymap(props.schema),
+        mathDeleteKeymap(props.schema),
+        tableAfterDeleteKeymap(props.schema),
+        tableEditing(),
         keymap({
           "Mod-z": undo,
           "Mod-y": redo,
           "Mod-Shift-z": redo,
-          Tab: sinkListItem(props.schema.nodes.listItem),
-          "Shift-Tab": liftListItem(props.schema.nodes.listItem),
         }),
         keymap(baseKeymap),
-        preserveMarksPlugin(),
         new Plugin({
           view() {
             return {
@@ -118,7 +111,31 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
   });
 
   const view = createMemo(
-    () => new EditorView(ref()!, { state: editorState() }),
+    () =>
+      new EditorView(ref()!, {
+        state: editorState(),
+        nodeViews: {
+          math(node, view, getPos) {
+            const safeGetPos = () => {
+              const pos = getPos?.();
+              if (typeof pos !== "number") {
+                throw new Error("getPos is undefined or not a number");
+              }
+              return pos;
+            };
+            return new MathNodeView(node, view, safeGetPos);
+          },
+          image(node, view, getPos) {
+            const safeGetPos = () => {
+              const pos = getPos?.();
+              if (typeof pos !== "number")
+                throw new Error("getPos is undefined or not a number");
+              return pos;
+            };
+            return new ImageNodeView(node, view, safeGetPos);
+          },
+        },
+      }),
   );
   onCleanup(() => view().destroy());
 
