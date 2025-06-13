@@ -1,5 +1,5 @@
 import { Component, createSignal, onMount, For } from "solid-js";
-import { repositoryHref } from "../../lib/github/GithubUtility";
+import { repositoryHref, getFilePathFromHref } from "../../lib/github/GithubUtility";
 import {
   getAllBranchesFromHref,
   getDefaultBranchFromHref,
@@ -56,6 +56,14 @@ export const BranchDropdown: Component = () => {
 
   // When a branch is selected, update state and localStorage
   const handleSelect = async (b: string) => {
+    const href = repositoryHref();
+    const filePath = getFilePathFromHref(href);
+    const content = window.__getEditorMarkdown
+      ? window.__getEditorMarkdown()
+      : "";
+    if (filePath && content && database.isInitialised()) {
+      await database.save("markdown", filePath, content);
+    }
     setBranch(b);
     setCurrentBranch(b); // <-- update the signal
     localStorage.setItem("currentBranch", b);
@@ -75,6 +83,7 @@ export const BranchDropdown: Component = () => {
     if (branches().includes(name)) {
       // If branch exists, just switch to it
       setBranch(name);
+      setCurrentBranch(name);
       localStorage.setItem("currentBranch", name);
       await database.setActiveBranch(name); // <-- set active branch here
       setShowInput(false);
