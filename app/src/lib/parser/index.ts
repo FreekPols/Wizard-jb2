@@ -349,8 +349,8 @@ function transformAst(
             let editable = false;
 
             // If the Node has a string value make it editable
-            if (typeof (myst as any).value === 'string') {
-                nodeContent = (myst as any).value;
+            if ('value' in myst && typeof myst.value === 'string') {
+                nodeContent = myst.value;
                 editable = true;
             } else {
                 // If Node has no string value make it not editable
@@ -360,26 +360,28 @@ function transformAst(
             // Return the unsupported MyST Node
             return schema.node(
                 "unsupported_block",
-                {myst: myst, editable: editable},
+                { myst: myst, editable: editable },
                 schema.text(nodeContent),
             );
         } else {
             // No children so likely inline
-            let nodeContent: String;
-            let editable: boolean = false
+            let nodeContent: string;
+            let editable: boolean = false;
             // Transform unsupported node to text
             if (myst.data) {
                 nodeContent = JSON.stringify(myst.data, null, 2);
-                editable = true
+                editable = true;
             } else {
-                nodeContent = "Directive not supported and no text content found"
+                nodeContent =
+                    "Directive not supported and no text content found";
             }
 
-            return schema.text(nodeContent,
-                [schema.mark("unsupported", {
+            return schema.text(nodeContent, [
+                schema.mark("unsupported", {
                     myst: myst,
-                    editable: editable
-                })])
+                    editable: editable,
+                }),
+            ]);
         }
     }
     return handler(myst, definitions);

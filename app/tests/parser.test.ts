@@ -77,7 +77,7 @@ describe("Markdown parser", () => {
         );
         expect(parsed).toBeInstanceOf(Node);
         expect(parsed.children).toHaveLength(1);
-        expect(parsed.children[0].type.name).toBe("code");
+        expect(parsed.children[0].type.name).toBe("code_block");
         expect(parsed.children[0].textContent).toBe(
             "console.log('Hello, world!');",
         );

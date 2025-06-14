@@ -201,14 +201,10 @@ export const schema = new Schema({
         unsupported_block: {
             attrs: {
                 myst: { default: null },
-                editable: {default: false},
+                editable: { default: false },
             },
-            toDOM(node) {
-                return [
-                    "pre",
-                    { class: `unsupported_block` },
-                    ["code", 0],
-                ];
+            toDOM(_node) {
+                return ["pre", { class: `unsupported_block` }, ["code", 0]];
             },
             group: "flowContent",
             content: "text*",
@@ -521,7 +517,7 @@ export const schema = new Schema({
         unsupported: {
             attrs: {
                 myst: { default: null },
-                editable: { default: false},
+                editable: { default: false },
             },
             toDOM() {
                 return ["code", { class: "unsupported-inline" }];

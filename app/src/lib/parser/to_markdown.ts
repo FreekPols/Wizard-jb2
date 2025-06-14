@@ -70,7 +70,7 @@ function wrapMark(mark: Mark, children: PhrasingContent[]): PhrasingContent {
                 value: children.map((c) => (c as Text).value).join(""),
             } as InlineCode;
 
-        case "unsupported":
+        case "unsupported": {
             // Get the new content
             const newTextContent = children
                 .map((c) => (c as Text).value)
@@ -97,7 +97,7 @@ function wrapMark(mark: Mark, children: PhrasingContent[]): PhrasingContent {
                     return mark.attrs.myst as PhrasingContent;
                 }
             }
-
+        }
         case "strong":
             return { type: "strong", children } as Strong;
 
@@ -156,7 +156,7 @@ const proseMirrorToMystHandlers = {
         type: "code",
         lang: node.attrs.lang,
         meta: node.attrs.meta,
-        value: node.textContent
+        value: node.textContent,
     }),
     unsupported_block: (node: Node) => {
         if (node.attrs.editable) {
@@ -353,7 +353,6 @@ export function prosemirrorToMarkdown(node: Node): string {
  * Received: *one *two **three*** four*
  */
 function handleInline(node: Node): PhrasingContent[] {
-
     const tokens = Array.from(node.content.content);
 
     type Span = { mark: Mark; first: number; last: number; length: number };
