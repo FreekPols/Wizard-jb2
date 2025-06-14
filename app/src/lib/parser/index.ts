@@ -339,30 +339,47 @@ function transformAst(
     if (!(myst.type in handlers)) {
         console.warn(`Unknown node type '${myst.type}'`);
         // console.log("Unsupported Debug: " + myst.data)
-        let nodeContent: String;
-        // Transform unsupported node to text
-        if (myst.data) {
-            nodeContent = JSON.stringify(myst.data, null, 2);
-        } else {
-            nodeContent = "Directive not supported and no text content found"
-        }
 
-        console.log(nodeContent)
+        // console.log(nodeContent)
 
         // We return a ProseMirror `code_block` or `code` node.
         if ("children" in myst) {
             // Likely a block Node because it has children
+            let nodeContent: string;
+            let editable = false;
+
+            // If the Node has a string value make it editable
+            if (typeof (myst as any).value === 'string') {
+                nodeContent = (myst as any).value;
+                editable = true;
+            } else {
+                // If Node has no string value make it not editable
+                nodeContent = JSON.stringify(myst, null, 2);
+            }
+
+            // Return the unsupported MyST Node
             return schema.node(
                 "unsupported_block",
-                // We set the language to 'json' for nice syntax highlighting
-                // and add a 'meta' attribute for clarity.
-                { lang: "json", meta: `Unsupported node: ${myst.type}`, myst: myst},
-                // The found text
+                {myst: myst, editable: editable},
                 schema.text(nodeContent),
             );
         } else {
             // No children so likely inline
-            return schema.text(nodeContent, [schema.mark("unsupported", {myst: myst})])
+            let nodeContent: String;
+            let editable: boolean = false
+            // Transform unsupported node to text
+            if (myst.data) {
+                nodeContent = JSON.stringify(myst.data, null, 2);
+                editable = true
+            } else {
+                nodeContent = "Directive not supported and no text content found"
+            }
+
+            return schema.text(nodeContent,
+                [schema.mark("unsupported", {
+                    myst: myst,
+                    editable: editable
+                })])
         }
     }
     return handler(myst, definitions);

@@ -201,6 +201,7 @@ export const schema = new Schema({
         unsupported_block: {
             attrs: {
                 myst: { default: null },
+                editable: {default: false},
             },
             toDOM(node) {
                 return [
@@ -520,6 +521,7 @@ export const schema = new Schema({
         unsupported: {
             attrs: {
                 myst: { default: null },
+                editable: { default: false},
             },
             toDOM() {
                 return ["code", { class: "unsupported-inline" }];

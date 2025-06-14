@@ -71,7 +71,23 @@ function wrapMark(mark: Mark, children: PhrasingContent[]): PhrasingContent {
             } as InlineCode;
 
         case "unsupported":
-            return mark.attrs.myst as PhrasingContent
+            if (mark.attrs.editable) {
+                // Get the new content
+                const newTextContent = children
+                    .map((c) => (c as Text).value)
+                    .join("");
+
+                // Copy the MystNode and update its value
+                const newMystNode = {
+                    ...mark.attrs.myst,
+                    value: newTextContent,
+                };
+
+                // Return with new text
+                return newMystNode as PhrasingContent;
+            } else {
+                return mark.attrs.myst as PhrasingContent
+            }
 
         case "strong":
             return { type: "strong", children } as Strong;
@@ -134,7 +150,28 @@ const proseMirrorToMystHandlers = {
         value: node.textContent
     }),
     unsupported_block: (node: Node) => {
-        return node.attrs.myst as MystNode;
+        if (node.attrs.editable) {
+            const newContent = node.textContent;
+            const newMystNode = {
+                ...node.attrs.myst,
+                value: newContent,
+            };
+            return newMystNode as MystNode;
+        } else {
+            // Dangerous! User might fuck up but I think this should be safe
+            const editedJson = node.textContent;
+            try {
+                // Try to parse the edited JSON.
+                return JSON.parse(editedJson) as MystNode;
+            } catch (e) {
+                // If parsing fails, log a warning and revert to the original node.
+                console.warn(
+                    "Could not parse edited JSON. Copying the original.",
+                    e,
+                );
+                return node.attrs.myst as MystNode;
+            }
+        }
     },
     root: (node: Node): Root => ({
         type: "root",
