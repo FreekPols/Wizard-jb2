@@ -106,7 +106,7 @@ export function mystToProseMirror(myst: GenericParent): Node {
         console.log("Standard successful.");
         return res;
     } catch (e) {
-        if (e instanceof RangeError && e.message.includes("Invalid content") ) {
+        if (e instanceof RangeError && e.message.includes("Invalid content")) {
             console.warn("Standard parse failed, trying safe mode");
             const res = transformAst(myst, definitions, true);
             if (Array.isArray(res)) {
@@ -115,18 +115,19 @@ export function mystToProseMirror(myst: GenericParent): Node {
             console.log("Safe mode successful.");
             return res;
         } else {
-            console.warn("Safe mode failed")
+            console.warn("Safe mode failed");
             throw e;
         }
     }
-
-
-
 }
 
 /** Utility function to recursively convert children in a handler function.
  */
-function children(node: GenericNode, defs: DefinitionMap, safe = false): Node[] | undefined {
+function children(
+    node: GenericNode,
+    defs: DefinitionMap,
+    safe = false,
+): Node[] | undefined {
     return node.children?.flatMap((x) => {
         const res = transformAst(x, defs, safe);
         return Array.isArray(res) ? res : [res];
@@ -280,7 +281,11 @@ const handlers = {
             node.children?.flatMap((x) => {
                 const res =
                     x.type === "image"
-                        ? schema.node("imageWrapper", {}, transformAst(x, defs, safe))
+                        ? schema.node(
+                              "imageWrapper",
+                              {},
+                              transformAst(x, defs, safe),
+                          )
                         : transformAst(x, defs, safe);
                 return Array.isArray(res) ? res : [res];
             }),
@@ -356,7 +361,7 @@ const handlers = {
 function transformAst(
     myst: MystNode,
     definitions: Map<string, Definition>,
-    safe: boolean = false
+    safe: boolean = false,
 ): Node | Node[] {
     const handler = (
         handlers as unknown as Record<
