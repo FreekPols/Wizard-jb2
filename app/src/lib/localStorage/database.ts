@@ -65,14 +65,69 @@ const _validateStore = (store: string): void => {
     }
 };
 
+export type Database = {
+  dbPromise: Promise<IDBPDatabase> | null;
+  activeRepo: string;
+  activeBranch: string;
+
+  getActiveRepo(): string;
+  setActiveRepo(repo: string): void;
+
+  getActiveBranch(): string;
+  setActiveBranch(branch: string): void;
+
+  isInitialised(): boolean;
+
+  getDB(): Promise<IDBPDatabase>;
+
+  save<T>(store: string, key: IDBValidKey, value: T): Promise<void>;
+  saveTo<T>(
+    store: string,
+    repo: string,
+    branch: string,
+    key: IDBValidKey,
+    value: T
+  ): Promise<void>;
+
+  load<T>(store: string, key: IDBValidKey): Promise<T | undefined>;
+
+  loadMultiple<T>(store: string, keys: IDBValidKey[]): Promise<[IDBValidKey, T][]>;
+
+  loadAll<T>(store: string): Promise<[IDBValidKey, T][]>;
+
+  delete(store: string, key: IDBValidKey): Promise<void>;
+
+  keys(store: string): Promise<IDBValidKey[]>;
+
+  clear(store: string): Promise<void>;
+
+  has(store: string, key: IDBValidKey): Promise<boolean>;
+
+  destroy(options?: {
+    preserveRepo?: boolean;
+    preserveBranch?: boolean;
+    preserveData?: boolean;
+  }): Promise<void>;
+
+  migrateNamespace(
+    oldRepo: string,
+    oldBranch: string,
+    newRepo: string,
+    newBranch: string,
+    deleteOldValues?: boolean,
+    stores?: string[]
+  ): Promise<void>;
+};
+
 /**
  * Transactional functions for interacting with IndexedDB.
  * Uses the {@link https://www.npmjs.com/package/idb | idb} library.
  *
  * @property {Promise<IDBPDatabase> | null} dbPromise - Lazily initialised promise resolving to the IDB database.
- * @property {string} activeRepo - The currently active GitHub repo used to namespace keys.
+ * @property {string} activeRepo - The currently active GitHub repo, used to namespace keys.
+ * @property {string} activeBranch - The currently active branch in the repo, used to namespace keys.
  */
-export const database = {
+export const database: Database = {
     /** Lazy-initialized promise for the IndexedDB connection. */
     dbPromise: null as Promise<IDBPDatabase> | null,
 
@@ -101,7 +156,7 @@ export const database = {
      * @param repo - The GitHub repo name.
      * @throws Will throw if called after initialization.
      */
-    async setActiveRepo(repo: string) {
+    setActiveRepo(repo: string): void {
         this.activeRepo = repo;
     },
 
@@ -117,7 +172,7 @@ export const database = {
      * Sets the active branch.
      * @param branch - The branch name.
      */
-    async setActiveBranch(branch: string) {
+    setActiveBranch(branch: string): void {
         this.activeBranch = branch;
     },
 
@@ -125,7 +180,7 @@ export const database = {
      * Indicates whether the repo has been initialized.
      * @returns True if initialized, false otherwise.
      */
-    isInitialised() {
+    isInitialised(): boolean {
         return this.activeRepo != "" && this.activeBranch != "";
     },
 
@@ -210,6 +265,30 @@ export const database = {
         await tx.done;
         return result;
     },
+
+    /**
+ * Loads values for keys from the specified store.
+ * @param store - The object store to load from.
+ * @param keys - The keys to retrieve.
+ * @returns An array of [key, value] tuples for found values.
+ */
+async loadMultiple<T>(store: string, keys: IDBValidKey[]): Promise<[IDBValidKey, T][]> {
+    _validateStore(store);
+    const db = await this.getDB();
+    const tx = db.transaction(store, "readonly");
+    const results: [IDBValidKey, T][] = [];
+
+    for (const key of keys) {
+        const fullKey = _makePrefixedKey(this.activeRepo, this.activeBranch, key);
+        const value = await tx.store.get(fullKey);
+        if (value !== undefined) {
+            results.push([key, value]);
+        }
+    }
+
+    await tx.done;
+    return results;
+},
 
     /**
      * Loads all key-value pairs for the current repo and branch in the specified store.
