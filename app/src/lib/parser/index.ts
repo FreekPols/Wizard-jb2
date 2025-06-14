@@ -268,7 +268,7 @@ const handlers = {
         const style = align ? `text-align:${align}` : null;
         const processedChildren = children(node, defs, safe);
         if (processedChildren && processedChildren.every((c) => c.isInline)) {
-             return schema.node("table_cell", { style }, [
+            return schema.node("table_cell", { style }, [
                 schema.node("paragraph", {}, processedChildren),
             ]);
         }

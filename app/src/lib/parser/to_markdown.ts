@@ -273,23 +273,23 @@ const proseMirrorToMystHandlers = {
         meta: node.attrs.meta,
     }),
     table: (node: Node): Table => ({
-        type: 'table',
+        type: "table",
         children: handleChildren<Table>(node),
     }),
     table_row: (node: Node): TableRow => ({
-        type: 'tableRow',
+        type: "tableRow",
         children: handleChildren<TableRow>(node),
     }),
     table_cell: (node: Node): TableCell => {
         const style = node.attrs.style as string | null;
-        let align: 'left' | 'right' | 'center' | undefined = undefined;
+        let align: "left" | "right" | "center" | undefined = undefined;
         if (style) {
-            if (style.includes('text-align:center')) align = 'center';
-            else if (style.includes('text-align:right')) align = 'right';
-            else if (style.includes('text-align:left')) align = 'left';
+            if (style.includes("text-align:center")) align = "center";
+            else if (style.includes("text-align:right")) align = "right";
+            else if (style.includes("text-align:left")) align = "left";
         }
         return {
-            type: 'tableCell',
+            type: "tableCell",
             ...(align && { align }),
             children: handleChildren<TableCell>(node),
         };

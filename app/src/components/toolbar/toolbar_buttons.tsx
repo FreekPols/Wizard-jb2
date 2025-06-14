@@ -1,12 +1,10 @@
 import { redo, undo } from "prosemirror-history";
 import {
   blockquoteActive,
-  codeBlockActive,
   decreaseIndent,
   increaseIndent,
   toggleBlockquote,
   toggleBold,
-  toggleCodeBlock,
   toggleInlineCode,
   toggleItalic,
   toggleStrikethrough,

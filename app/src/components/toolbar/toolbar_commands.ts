@@ -28,7 +28,6 @@ export const toggleStrikethrough = toggleMark(schema.marks.strikethrough);
 // Toggle inline code
 export const toggleInlineCode = toggleMark(schema.marks.code);
 
-
 // --- BLOCK COMMANDS ---
 
 // Wrap selection in blockquote
