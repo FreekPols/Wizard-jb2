@@ -66,57 +66,60 @@ const _validateStore = (store: string): void => {
 };
 
 export type Database = {
-  dbPromise: Promise<IDBPDatabase> | null;
-  activeRepo: string;
-  activeBranch: string;
+    dbPromise: Promise<IDBPDatabase> | null;
+    activeRepo: string;
+    activeBranch: string;
 
-  getActiveRepo(): string;
-  setActiveRepo(repo: string): void;
+    getActiveRepo(): string;
+    setActiveRepo(repo: string): void;
 
-  getActiveBranch(): string;
-  setActiveBranch(branch: string): void;
+    getActiveBranch(): string;
+    setActiveBranch(branch: string): void;
 
-  isInitialised(): boolean;
+    isInitialised(): boolean;
 
-  getDB(): Promise<IDBPDatabase>;
+    getDB(): Promise<IDBPDatabase>;
 
-  save<T>(store: string, key: IDBValidKey, value: T): Promise<void>;
-  saveTo<T>(
-    store: string,
-    repo: string,
-    branch: string,
-    key: IDBValidKey,
-    value: T
-  ): Promise<void>;
+    save<T>(store: string, key: IDBValidKey, value: T): Promise<void>;
+    saveTo<T>(
+        store: string,
+        repo: string,
+        branch: string,
+        key: IDBValidKey,
+        value: T,
+    ): Promise<void>;
 
-  load<T>(store: string, key: IDBValidKey): Promise<T | undefined>;
+    load<T>(store: string, key: IDBValidKey): Promise<T | undefined>;
 
-  loadMultiple<T>(store: string, keys: IDBValidKey[]): Promise<[IDBValidKey, T][]>;
+    loadMultiple<T>(
+        store: string,
+        keys: IDBValidKey[],
+    ): Promise<[IDBValidKey, T][]>;
 
-  loadAll<T>(store: string): Promise<[IDBValidKey, T][]>;
+    loadAll<T>(store: string): Promise<[IDBValidKey, T][]>;
 
-  delete(store: string, key: IDBValidKey): Promise<void>;
+    delete(store: string, key: IDBValidKey): Promise<void>;
 
-  keys(store: string): Promise<IDBValidKey[]>;
+    keys(store: string): Promise<IDBValidKey[]>;
 
-  clear(store: string): Promise<void>;
+    clear(store: string): Promise<void>;
 
-  has(store: string, key: IDBValidKey): Promise<boolean>;
+    has(store: string, key: IDBValidKey): Promise<boolean>;
 
-  destroy(options?: {
-    preserveRepo?: boolean;
-    preserveBranch?: boolean;
-    preserveData?: boolean;
-  }): Promise<void>;
+    destroy(options?: {
+        preserveRepo?: boolean;
+        preserveBranch?: boolean;
+        preserveData?: boolean;
+    }): Promise<void>;
 
-  migrateNamespace(
-    oldRepo: string,
-    oldBranch: string,
-    newRepo: string,
-    newBranch: string,
-    deleteOldValues?: boolean,
-    stores?: string[]
-  ): Promise<void>;
+    migrateNamespace(
+        oldRepo: string,
+        oldBranch: string,
+        newRepo: string,
+        newBranch: string,
+        deleteOldValues?: boolean,
+        stores?: string[],
+    ): Promise<void>;
 };
 
 /**
@@ -267,28 +270,35 @@ export const database: Database = {
     },
 
     /**
- * Loads values for keys from the specified store.
- * @param store - The object store to load from.
- * @param keys - The keys to retrieve.
- * @returns An array of [key, value] tuples for found values.
- */
-async loadMultiple<T>(store: string, keys: IDBValidKey[]): Promise<[IDBValidKey, T][]> {
-    _validateStore(store);
-    const db = await this.getDB();
-    const tx = db.transaction(store, "readonly");
-    const results: [IDBValidKey, T][] = [];
+     * Loads values for keys from the specified store.
+     * @param store - The object store to load from.
+     * @param keys - The keys to retrieve.
+     * @returns An array of [key, value] tuples for found values.
+     */
+    async loadMultiple<T>(
+        store: string,
+        keys: IDBValidKey[],
+    ): Promise<[IDBValidKey, T][]> {
+        _validateStore(store);
+        const db = await this.getDB();
+        const tx = db.transaction(store, "readonly");
+        const results: [IDBValidKey, T][] = [];
 
-    for (const key of keys) {
-        const fullKey = _makePrefixedKey(this.activeRepo, this.activeBranch, key);
-        const value = await tx.store.get(fullKey);
-        if (value !== undefined) {
-            results.push([key, value]);
+        for (const key of keys) {
+            const fullKey = _makePrefixedKey(
+                this.activeRepo,
+                this.activeBranch,
+                key,
+            );
+            const value = await tx.store.get(fullKey);
+            if (value !== undefined) {
+                results.push([key, value]);
+            }
         }
-    }
 
-    await tx.done;
-    return results;
-},
+        await tx.done;
+        return results;
+    },
 
     /**
      * Loads all key-value pairs for the current repo and branch in the specified store.
