@@ -196,6 +196,22 @@ export const schema = new Schema({
             group: "flowContent",
             content: "text*",
         },
+        // Code block with hidden MyST for saving
+        // For now not editable
+        unsupported_block: {
+            attrs: {
+                myst: { default: null },
+            },
+            toDOM(node) {
+                return [
+                    "pre",
+                    { class: `unsupported_block` },
+                    ["code", 0],
+                ];
+            },
+            group: "flowContent",
+            content: "text*",
+        },
         target: {
             attrs: { label: string() },
             group: "flowContent",
@@ -498,6 +514,15 @@ export const schema = new Schema({
             parseDOM: [{ tag: "code" }],
             toDOM() {
                 return ["code"];
+            },
+        },
+        // Unsupported type
+        unsupported: {
+            attrs: {
+                myst: { default: null },
+            },
+            toDOM() {
+                return ["code", { class: "unsupported-inline" }];
             },
         },
         subscript: {

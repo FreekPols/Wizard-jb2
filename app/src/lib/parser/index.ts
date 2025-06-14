@@ -330,9 +330,6 @@ function transformAst(
     myst: MystNode,
     definitions: Map<string, Definition>,
 ): Node | Node[] {
-    // TODO: Maybe add some kind of fallback here for unsupported types. This
-    // might not be necessary, because the core specification should remain
-    // pretty stable, and we only parse directives that we know we can handle.
     const handler = (
         handlers as unknown as Record<
             string,
@@ -352,18 +349,21 @@ function transformAst(
 
         console.log(nodeContent)
 
-        // TODO: Fix this
-        // We return a ProseMirror `code_block` node.
-        // return schema.node(
-        //     "code_block",
-        //     // We set the language to 'json' for nice syntax highlighting
-        //     // and add a 'meta' attribute for clarity.
-        //     { lang: "json", meta: `Unsupported node: ${myst.type}` },
-        //     // The found text
-        //     schema.text(nodeContent),
-        // );
-
-        return []
+        // We return a ProseMirror `code_block` or `code` node.
+        if ("children" in myst) {
+            // Likely a block Node because it has children
+            return schema.node(
+                "unsupported_block",
+                // We set the language to 'json' for nice syntax highlighting
+                // and add a 'meta' attribute for clarity.
+                { lang: "json", meta: `Unsupported node: ${myst.type}`, myst: myst},
+                // The found text
+                schema.text(nodeContent),
+            );
+        } else {
+            // No children so likely inline
+            return schema.text(nodeContent, [schema.mark("unsupported", {myst: myst})])
+        }
     }
     return handler(myst, definitions);
 }

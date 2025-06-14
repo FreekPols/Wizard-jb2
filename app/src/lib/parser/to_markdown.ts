@@ -14,6 +14,7 @@ import type {
     List,
     ListItem,
     Code,
+    InlineCode,
     Target,
     Directive,
     Admonition,
@@ -63,6 +64,15 @@ function mystChildren(node: Node): MystNode[] {
  */
 function wrapMark(mark: Mark, children: PhrasingContent[]): PhrasingContent {
     switch (mark.type.name) {
+        case "code":
+            return {
+                type: "inlineCode",
+                value: children.map((c) => (c as Text).value).join(""),
+            } as InlineCode;
+
+        case "unsupported":
+            return mark.attrs.myst as PhrasingContent
+
         case "strong":
             return { type: "strong", children } as Strong;
 
@@ -117,7 +127,15 @@ function handleChildren<T extends MystNode>(node: Node): ChildrenOf<T> {
 }
 
 const proseMirrorToMystHandlers = {
-    code: (node: Node): Code => ({ type: "code", value: node.textContent }),
+    code_block: (node: Node): Code => ({
+        type: "code",
+        lang: node.attrs.lang,
+        meta: node.attrs.meta,
+        value: node.textContent
+    }),
+    unsupported_block: (node: Node) => {
+        return node.attrs.myst as MystNode;
+    },
     root: (node: Node): Root => ({
         type: "root",
         children: handleChildren<Root>(node),
@@ -289,6 +307,7 @@ export function prosemirrorToMarkdown(node: Node): string {
  * Received: *one *two **three*** four*
  */
 function handleInline(node: Node): PhrasingContent[] {
+
     const tokens = Array.from(node.content.content);
 
     type Span = { mark: Mark; first: number; last: number; length: number };
