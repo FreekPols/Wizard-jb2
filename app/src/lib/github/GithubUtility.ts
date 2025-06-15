@@ -1,25 +1,49 @@
 import { createSignal } from "solid-js";
 
+/**
+ * Reactive signal storing the href of the repository source link.
+ * Initialized to null until `getRepositoryLink` runs.
+ */
 export const [repositoryHref, setRepositoryHref] = createSignal<string | null>(
     null,
 );
 
+/**
+ * Reactive signal storing the href of the current file edit link.
+ * Initialized to null until `getCurrentFileHref` runs.
+ */
+export const [currentFileHref, setCurrentFileHref] = createSignal<
+    string | null
+>(null);
+
+/**
+ * Locates the 'Source Repository' button on the page, extracts its href,
+ * updates the 'repositoryHref' signal, logs to console, and returns it.
+ *
+ * @returns The GitHub repository URL if found, otherwise null.
+ */
 export function getRepositoryLink(): string | null {
+    // Query for the button/link with class .btn-source-repository-button.
     const anchor = document.querySelector<HTMLAnchorElement>(
         "a.btn-source-repository-button",
     );
+
+    // Return the anchor.href or null.
     if (anchor) {
-        setRepositoryHref(anchor.href);
-        console.log("Repository link:", anchor.href);
-        return anchor.href;
+        return setRepositoryHref(anchor.href);
     } else {
         // Only happens when a link to a GitHub repository is not found
         console.warn("Source repository link not found.");
-        setRepositoryHref(null);
-        return null;
+        return setRepositoryHref(null);
     }
 }
 
+/**
+ * Parses owner and repository name from a GitHub URL.
+ *
+ * @param href - Full repository URL or null
+ * @returns An object with `owner` and `repo` properties, or null if parsing fails.
+ */
 export function parseOwnerRepoFromHref(
     href: string | null,
 ): { owner: string; repo: string } | null {
@@ -32,23 +56,25 @@ export function parseOwnerRepoFromHref(
     return null;
 }
 
-export const [currentFileHref, setCurrentFileHref] = createSignal<
-    string | null
->(null);
-
+/**
+ * Finds the 'Edit this file' button on the page, extracts its href,
+ * updates the `currentFileHref` signal, logs to console, and returns it.
+ *
+ * @returns The GitHub file edit URL if found, otherwise null.
+ */
 export function getCurrentFileHref(): string | null {
+    // Query for the edit button/link with class .btn-source-edit-button.
     const anchor = document.querySelector<HTMLAnchorElement>(
         "a.btn-source-edit-button",
     );
+
+    // Return the anchor.href or null.
     if (anchor) {
-        setCurrentFileHref(anchor.href);
-        console.log("Current file:", anchor.href);
-        return anchor.href;
+        return setCurrentFileHref(anchor.href);
     } else {
         // In theory, this should never happen
         console.warn("Current file link not found.");
-        setCurrentFileHref(null);
-        return null;
+        return setCurrentFileHref(null);
     }
 }
 
@@ -68,32 +94,4 @@ export function getFilePathFromHref(href: string | null): string | null {
     const filePath = match ? match[1] : null;
     console.log("Extracted file path:", filePath);
     return filePath;
-}
-
-/**
- * Fetches all branch names from a GitHub repository.
- * @param href The repository URL (e.g. https://github.com/owner/repo)
- * @param token (optional) GitHub token for private repos or higher rate limits
- * @returns An array of branch names, or an empty array if none found
- */
-export async function getAllBranchesFromHref(
-    href: string,
-    token?: string,
-): Promise<string[]> {
-    const repoInfo = parseOwnerRepoFromHref(href);
-    if (!repoInfo) return [];
-    const { owner, repo } = repoInfo;
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/branches?per_page=100`;
-    const headers: Record<string, string> = {
-        Accept: "application/vnd.github.v3+json",
-    };
-    if (token) {
-        headers.Authorization = `token ${token}`;
-    }
-
-    const resp = await fetch(apiUrl, { headers });
-    if (!resp.ok) return [];
-    const data = await resp.json();
-    // Each branch object has a 'name' property
-    return Array.isArray(data) ? data.map((b) => b.name) : [];
 }
