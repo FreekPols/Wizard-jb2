@@ -296,17 +296,7 @@ const handlers = {
         schema.node(
             "container",
             { kind: node.kind },
-            node.children?.flatMap((x) => {
-                const res =
-                    x.type === "image"
-                        ? schema.node(
-                              "imageWrapper",
-                              {},
-                              transformAst(x, defs, safe),
-                          )
-                        : transformAst(x, defs, safe);
-                return Array.isArray(res) ? res : [res];
-            }),
+            children(node, defs, safe),
         ),
     emphasis: (node: Emphasis, defs: DefinitionMap, safe) =>
         markChildren(node, defs, safe, schema.mark("emphasis")),
