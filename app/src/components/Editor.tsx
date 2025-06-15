@@ -215,10 +215,7 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
 
       if (repoInfo && branch) {
         // Try to fetch from the current branch first (and fallback to default branch inside getFileContentFromRepo)
-        markdown = await github.fetchFileFromBranch(
-          filePath,
-          branch,
-        );
+        markdown = await github.fetchFileFromBranch(filePath, branch);
       }
     }
 
