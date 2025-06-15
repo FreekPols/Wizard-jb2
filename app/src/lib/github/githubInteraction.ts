@@ -12,7 +12,6 @@ interface RepoInfo {
     default_branch: string;
 }
 
-
 /**
  * Interface to simplify handling data from GitHub API calls.
  */
@@ -111,7 +110,6 @@ class GitHubInteraction {
         };
     }
 
-
     /**
      * Fetches raw file contents for the given file paths, trying the current
      * branch first and falling back to the repository's default branch.
@@ -119,7 +117,9 @@ class GitHubInteraction {
      * @returns Array of file contents as strings, in the same order.
      * @throws If files cannot be retrieved from either branch.
      */
-    public async fetchFiles(filePaths: string[]): Promise<string[]> { //TODO why is this not called anywhere? Did I remove something accidentally?
+    public async fetchFiles(filePaths: string[]): Promise<string[]> {
+        //TODO why is this not called anywhere? Did I remove something accidentally?
+        // Try to load content from current branch.
         try {
             return await this.fetchFilesFromBranch(filePaths, this.getBranch());
         } catch (e) {
@@ -127,6 +127,8 @@ class GitHubInteraction {
                 "unable to fetch file contents from current branch. " + e,
             );
         }
+
+        // Try to load content from default branch.
         try {
             const repoInfo = await this.fetchRepoInfo(
                 this.getOwner(),
@@ -141,6 +143,8 @@ class GitHubInteraction {
                 "unable to fetch file contents from default branch. " + e,
             );
         }
+
+        // Throw if no content was retrieved.
         throw new Error("Unable to fetch file contents.");
     }
 
@@ -174,13 +178,20 @@ class GitHubInteraction {
         filePath: string,
         branchName: string,
     ): Promise<string> {
-        const url = `https://api.github.com/repos/${this.getOwner()}/${this.getRepo()}/contents/${encodeURIComponent(filePath)}?ref=${encodeURIComponent(branchName)}`;
+        // Edit the header to make sure we get raw data for the file contents.
         const header = this.headers;
-        header.Accept = "application/vnd.github.v3.raw"; //why is this needed?
-        const resp = await fetch(url, { headers: header });
+        header.Accept = "application/vnd.github.v3.raw";
+
+        // Fetch the data, throw if the response was not okay.
+        const resp = await fetch(
+            `https://api.github.com/repos/${this.getOwner()}/${this.getRepo()}/contents/${encodeURIComponent(filePath)}?ref=${encodeURIComponent(branchName)}`,
+            { headers: header },
+        );
         if (!resp.ok) {
             throw new Error(`Error getting file from "${filePath}"! \n`);
         }
+
+        // Return the text content of the response if the response was okay.
         return await resp.text();
     }
 
@@ -195,25 +206,36 @@ class GitHubInteraction {
         message: string,
         files: [string, T][],
     ): Promise<void> {
-        const { owner: owner, repo: repo, branch: branch } = this;
+        // Make sure the branch exists
+        const baseCommit = await this.ensureBranchCommit(
+            this.getOwner(),
+            this.getRepo(),
+            this.getBranch(),
+        );
 
-        const baseCommit = await this.ensureBranchCommit(owner, repo, branch);
-
+        // Create a tree
         const treeCommit = await this.createTreeWithFiles(
-            owner,
-            repo,
+            this.getOwner(),
+            this.getRepo(),
             files,
             baseCommit,
         );
 
+        // Create a commit
         const newCommit = await this.createCommitFromTree(
-            owner,
-            repo,
+            this.getOwner(),
+            this.getRepo(),
             message,
             treeCommit,
         );
 
-        await this.updateBranchRef(owner, repo, branch, newCommit.sha);
+        // Update branch ref
+        await this.updateBranchRef(
+            this.getOwner(),
+            this.getRepo(),
+            this.getBranch(),
+            newCommit.sha,
+        );
     }
 
     /**
@@ -229,14 +251,18 @@ class GitHubInteraction {
         key: IDBValidKey,
         store: string,
     ): Promise<void> {
+        // Load file from database.
         const file = await database.load<T>(store, key);
+
+        // Throw if the file was not found.
         if (file === undefined) {
             throw new Error(
                 `No file found under key "${key}" in store "${store}"`,
             );
         }
-        if (file != undefined)
-            await this.commitFiles<T>(message, [[key.toString(), file]]);
+
+        // Commit the file if it exists.
+        await this.commitFiles<T>(message, [[key.toString(), file]]);
     }
 
     /**
@@ -252,7 +278,10 @@ class GitHubInteraction {
         keys: IDBValidKey[],
         store: string,
     ): Promise<void> {
+        // Load files from database.
         const files = await database.loadMultiple<T>(store, keys);
+
+        // Make sure all keys were retrieved, throw otherwise.
         const foundKeys = new Set(files.map(([k]) => k.toString()));
         const missing = keys
             .map((k) => k.toString())
@@ -260,6 +289,8 @@ class GitHubInteraction {
         if (missing.length) {
             throw new Error(`Missing files for keys: ${missing.join(", ")}`);
         }
+
+        // Commit all files for the keys!
         await this.commitFiles<T>(
             message,
             files.map((a: [IDBValidKey, T]) => [a[0].toString(), a[1]]),
@@ -277,28 +308,41 @@ class GitHubInteraction {
         message: string,
         store: string,
     ): Promise<void> {
+        // Load all files from the database.
         const files = await database.loadAll<T>(store);
+
+        // Throw if the database is empty.
         if (!files.length) {
             throw new Error(`No files found in store "${store}"`);
         }
+
+        // Commit all found files!
         await this.commitFiles<T>(
             message,
             files.map((a: [IDBValidKey, T]) => [a[0].toString(), a[1]]),
         );
     }
-    
+
+    /**
+     * Fetches up to 100 remote branches from the GitHub repository.
+     * @returns Array of branch names.
+     * @throws If the HTTP request fails.
+     */
     public async fetchRemoteBranches(): Promise<string[]> {
-        const owner = this.getOwner();
-        const repo  = this.getRepo();
-        // GitHub paginates at 30 per page by default; up to 100 works for most repos
-        const url = `https://api.github.com/repos/${owner}/${repo}/branches?per_page=100`;
-        const resp = await fetch(url, { headers: this.headers });
-        if (!resp.ok) {
-        throw new Error(
-            `Failed to list branches: ${resp.status} ${await resp.text()}`
+        // Fetch.
+        const resp = await fetch(
+            `https://api.github.com/repos/${this.getOwner()}/${this.getRepo()}/branches?per_page=100`, // TODO check if higher numbers are allowed
+            { headers: this.headers },
         );
+
+        // Throw if response not ok.
+        if (!resp.ok) {
+            throw new Error(
+                `Failed to list branches: ${resp.status} ${await resp.text()}`,
+            );
         }
-        // Each item looks like { name: string, commit: { sha: string }, protected: boolean, … }
+
+        // Return an array of the names of all branches.
         const data: { name: string }[] = await resp.json();
         return data.map((b) => b.name);
     }
@@ -317,22 +361,32 @@ class GitHubInteraction {
         repo: string,
         branch: string,
     ): Promise<BranchCommitInfo> {
+        // Get the repoInfo for the specified repo.
         const repoInfo = await this.fetchRepoInfo(owner, repo);
+
+        // Get commit info the the specified branch.
         let commit = await this.fetchBranchCommitInfo(owner, repo, branch);
-        if (!commit) {
+
+        // If the branch does not exist on remote, attempt to create it from the default branch.
+        if (commit === undefined) {
             await this.createBranch(
                 owner,
                 repo,
                 branch,
                 repoInfo.default_branch,
             );
+            // Check if the new branch now exists.
             commit = await this.fetchBranchCommitInfo(owner, repo, branch);
+
+            // If creation of a new branch fails, throw.
             if (!commit) {
                 throw new Error(
                     "Branch creation failed; could not load commit info.",
                 );
             }
         }
+
+        // Return the info for the branch.
         return commit;
     }
 
@@ -358,7 +412,7 @@ class GitHubInteraction {
      * @param response - JSON response from POST /git/commits.
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private updateCommitInfo(response: any): BranchCommitInfo {
+    private createCommitInfo(response: any): BranchCommitInfo {
         return {
             sha: response.sha,
             treeSha: response.tree.sha,
@@ -465,6 +519,7 @@ class GitHubInteraction {
         files: [string, T][],
         base: BranchCommitInfo,
     ): Promise<BranchCommitInfo> {
+        // Create the entries for the files
         const entries = files.map(([path, content]) => ({
             path,
             mode: "100644",
@@ -472,6 +527,8 @@ class GitHubInteraction {
             content:
                 typeof content === "string" ? content : JSON.stringify(content),
         }));
+
+        // Create a tree from the entries.
         const resp = await fetch(
             `https://api.github.com/repos/${owner}/${repo}/git/trees`,
             {
@@ -483,11 +540,15 @@ class GitHubInteraction {
                 }),
             },
         );
+
+        // Throw if the creation failed.
         if (!resp.ok) {
             throw new Error(
                 `Tree creation failed: ${resp.status} ${await resp.text()}`,
             );
         }
+
+        // Return an updated version of the base branch info with the new tree sha.
         const data = await resp.json();
         return this.updateTreeInfo(base, data.tree.sha);
     }
@@ -506,6 +567,7 @@ class GitHubInteraction {
         message: string,
         base: BranchCommitInfo,
     ): Promise<BranchCommitInfo> {
+        // Create a commit.
         const resp = await fetch(
             `https://api.github.com/repos/${owner}/${repo}/git/commits`,
             {
@@ -518,13 +580,17 @@ class GitHubInteraction {
                 }),
             },
         );
+
+        // Throw if it failed.
         if (!resp.ok) {
             throw new Error(
                 `Commit creation failed: ${resp.status} ${await resp.text()}`,
             );
         }
+
+        // Return the info from the response.
         const data = await resp.json();
-        return this.updateCommitInfo(data);
+        return this.createCommitInfo(data);
     }
 
     /**
@@ -559,4 +625,4 @@ class GitHubInteraction {
 /**
  * Singleton instance of GitHubInteraction.
  */
-export const github = new GitHubInteraction( "", "", "", "" ); //TODO needs to be initialised at some point, probably after logging in.
+export const github = new GitHubInteraction("", "", "", ""); //TODO needs to be initialised at some point, probably after logging in.

@@ -13,12 +13,13 @@ export const BranchDropdown: Component = () => {
   const [newBranchName, setNewBranchName] = createSignal("");
   const [error, setError] = createSignal<string | null>(null);
 
-  onMount(async () => { 
+  onMount(async () => {
     const href = repositoryHref(); //todo this should probably only run after githubInteraction is initialised
-    if (href) { //
+    if (href) {
+      //
       // Combine local branches and fetched branches, prioritizing local branches
       const allBranches = [
-        ...(database.loadLocalbranches("markdown")),
+        ...database.loadLocalbranches("markdown"),
         ...(await github.fetchRemoteBranches()),
       ];
       setBranches(allBranches);

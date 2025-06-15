@@ -60,19 +60,19 @@ const _stripPrefix = (
  * @returns        The branch name ("feature-foo") or `undefined` if it doesn’t match.
  */
 const getBranchFromKey = (
-  repo: string,
-  fullKey: IDBValidKey
+    repo: string,
+    fullKey: IDBValidKey,
 ): string | undefined => {
-  if (typeof fullKey !== "string") return undefined;
-  const prefix = `${repo}::`;
-  if (!fullKey.startsWith(prefix)) return undefined;
+    if (typeof fullKey !== "string") return undefined;
+    const prefix = `${repo}::`;
+    if (!fullKey.startsWith(prefix)) return undefined;
 
-  // strip off "repo::"
-  const rest = fullKey.slice(prefix.length);
+    // strip off "repo::"
+    const rest = fullKey.slice(prefix.length);
 
-  // split on "::" and take the first piece as branch
-  const [branch] = rest.split("::");
-  return branch || undefined;
+    // split on "::" and take the first piece as branch
+    const [branch] = rest.split("::");
+    return branch || undefined;
 };
 
 /**
@@ -195,14 +195,16 @@ export const database = {
      */
     loadLocalbranches(store: string): string[] {
         const branches: string[] = [];
-        
-        this.keys(store).then((keys) => keys.map(a => {
-            const branch = getBranchFromKey(github.getRepo(), a);
-            if(branch === undefined) return;
-            if(!branches.includes(branch)) {
-                branches.push(branch);
-            }
-        }));
+
+        this.keys(store).then((keys) =>
+            keys.map((a) => {
+                const branch = getBranchFromKey(github.getRepo(), a);
+                if (branch === undefined) return;
+                if (!branches.includes(branch)) {
+                    branches.push(branch);
+                }
+            }),
+        );
 
         return branches;
     },
