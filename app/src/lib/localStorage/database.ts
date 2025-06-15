@@ -188,6 +188,11 @@ export const database = {
         return result;
     },
 
+    /**
+     * Scans locally saved files and extracts branch names from the keys.
+     * @param store - The object store to load from.
+     * @returns Branches for the current repo.
+     */
     loadLocalbranches(store: string): string[] {
         const branches: string[] = [];
         

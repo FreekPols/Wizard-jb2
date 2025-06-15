@@ -1,51 +1,108 @@
 import { database } from "../localStorage/database";
 import { createSignal } from "solid-js";
 
+/**
+ * Interface to simplify handling data from GitHub API calls.
+ */
 interface RepoInfo {
+    /** Owner of the repo. */
     owner: string;
+
+    /** Default branch of the repo. */
     default_branch: string;
 }
 
+
+/**
+ * Interface to simplify handling data from GitHub API calls.
+ */
 interface BranchCommitInfo {
+    /** The commit SHA for this branch tip. */
     sha: string;
+
+    /** The SHA of the Git tree at this commit. */
     treeSha: string;
+
+    /** The list of parent commits (usually one, but can be two for merges). */
     parents: { sha: string }[];
 }
 
+/**
+ * Encapsulates interactions with the GitHub API, including fetching file
+ * contents, listing branches, and creating commits/trees.
+ */
 class GitHubInteraction {
+    /** The current repository name. */
     private repo = "";
+
+    /** The current repository owner. */
     private owner = "";
+
+    /** Personal access token or OAuth token for authentication. */
     private auth = "";
+
+    /** The branch to target for fetches and commits. */
     private branch = "";
 
-    public getBranch: () => string;
-    public setBranch: (v: string) => void;
+    /** Signal getter for the repository name. */
     public getRepo: () => string;
+
+    /** Signal setter for the repository name. */
     public setRepo: (v: string) => void;
+
+    /** Signal getter for the repo owner. */
     public getOwner: () => string;
+
+    /** Signal setter for the repo owner. */
     public setOwner: (v: string) => void;
+
+    /** Signal getter for the auth token. */
     public getAuth: () => string;
+
+    /** Signal setter for the auth token. */
     public setAuth: (v: string) => void;
 
+    /** Signal getter for the branch name. */
+    public getBranch: () => string;
+
+    /** Signal setter for the branch name. */
+    public setBranch: (v: string) => void;
+
+    /**
+     * Create a new GitHubInteraction.
+     * @param repo - Initial repository name.
+     * @param owner - Initial repository owner.
+     * @param auth - Initial authentication token.
+     * @param branch - Initial branch name.
+     */
     constructor(repo: string, owner: string, auth: string, branch: string) {
+        // Assign variables.
         this.repo = repo;
         this.owner = owner;
         this.auth = auth;
         this.branch = branch;
+
+        // Create reactive signals for each piece of state.
         const [getRepoSignal, setRepoSignal] = createSignal(this.repo);
         this.getRepo = getRepoSignal;
         this.setRepo = setRepoSignal;
+
         const [getOwnerSignal, setOwnerSignal] = createSignal(this.owner);
         this.getOwner = getOwnerSignal;
         this.setOwner = setOwnerSignal;
+
         const [getAuthSignal, setAuthSignal] = createSignal(this.auth);
         this.getAuth = getAuthSignal;
         this.setAuth = setAuthSignal;
+
         const [getBranchSignal, setBranchSignal] = createSignal(this.branch);
         this.getBranch = getBranchSignal;
         this.setBranch = setBranchSignal;
     }
 
+    /**
+     * HTTP headers including authentication for GitHub API calls.
+     */
     private get headers(): Record<string, string> {
         return {
             Authorization: `token ${this.auth}`,
@@ -54,7 +111,15 @@ class GitHubInteraction {
         };
     }
 
-    public async fetchFiles(filePaths: string[]): Promise<string[]> {
+
+    /**
+     * Fetches raw file contents for the given file paths, trying the current
+     * branch first and falling back to the repository's default branch.
+     * @param filePaths - Array of file paths within the repo.
+     * @returns Array of file contents as strings, in the same order.
+     * @throws If files cannot be retrieved from either branch.
+     */
+    public async fetchFiles(filePaths: string[]): Promise<string[]> { //TODO why is this not called anywhere? Did I remove something accidentally?
         try {
             return await this.fetchFilesFromBranch(filePaths, this.getBranch());
         } catch (e) {
@@ -79,6 +144,12 @@ class GitHubInteraction {
         throw new Error("Unable to fetch file contents.");
     }
 
+    /**
+     * Fetches raw file contents from a single named branch.
+     * @param filePaths - Array of file paths.
+     * @param branchName - Branch name to fetch from.
+     * @returns Array of file contents as strings.
+     */
     public async fetchFilesFromBranch(
         filePaths: string[],
         branchName: string,
@@ -92,6 +163,13 @@ class GitHubInteraction {
         return files;
     }
 
+    /**
+     * Fetches the raw contents of a single file via GitHub's "raw" media type.
+     * @param filePath - Path to the file in the repo.
+     * @param branchName - Branch from which to fetch.
+     * @returns File content as a string.
+     * @throws If the HTTP response is not OK.
+     */
     public async fetchFileFromBranch(
         filePath: string,
         branchName: string,
@@ -106,6 +184,13 @@ class GitHubInteraction {
         return await resp.text();
     }
 
+    /**
+     * Creates a Git commit on the configured branch by uploading blobs,
+     * creating a tree and commit, then updating the branch ref.
+     * @template T type of file contents.
+     * @param message - Commit message.
+     * @param files - Array of [filePath, content] tuples.
+     */
     public async commitFiles<T>(
         message: string,
         files: [string, T][],
@@ -131,6 +216,14 @@ class GitHubInteraction {
         await this.updateBranchRef(owner, repo, branch, newCommit.sha);
     }
 
+    /**
+     * Commits a single file from the local database to GitHub.
+     * @template T type of file contents.
+     * @param message - Commit message.
+     * @param key - Key of the file in the database.
+     * @param store - Name of the object store.
+     * @throws If no file is found under the given key.
+     */
     public async commitFromDatabase<T>(
         message: string,
         key: IDBValidKey,
@@ -146,6 +239,14 @@ class GitHubInteraction {
             await this.commitFiles<T>(message, [[key.toString(), file]]);
     }
 
+    /**
+     * Commits multiple files from the local database to GitHub.
+     * @template T type of file contents.
+     * @param message - Commit message.
+     * @param keys - Array of keys in the database.
+     * @param store - Name of the object store.
+     * @throws If any file keys are missing in the database.
+     */
     public async commitMultipleFromDatabase<T>(
         message: string,
         keys: IDBValidKey[],
@@ -165,6 +266,13 @@ class GitHubInteraction {
         );
     }
 
+    /**
+     * Commits all files from the local IndexedDB database to GitHub.
+     * @template T type of file contents.
+     * @param message - Commit message.
+     * @param store - Name of the object store.
+     * @throws If no files are found in the object store.
+     */
     public async commitAllFromDatabase<T>(
         message: string,
         store: string,
@@ -195,6 +303,15 @@ class GitHubInteraction {
         return data.map((b) => b.name);
     }
 
+    /**
+     * Ensures the target branch exists by reading its current commit or
+     * creating it off the default branch if missing.
+     * @param owner - Repo owner.
+     * @param repo - Repo name.
+     * @param branch - Branch name to ensure.
+     * @returns Commit info for the branch tip.
+     * @throws If creation or fetch fails.
+     */
     private async ensureBranchCommit(
         owner: string,
         repo: string,
@@ -219,6 +336,12 @@ class GitHubInteraction {
         return commit;
     }
 
+    /**
+     * Builds a new tree on top of a base commit by adding or updating blobs.
+     * @param base - The base commit info.
+     * @param newTreeSha - SHA of the newly created tree.
+     * @returns A BranchCommitInfo struct pointing to the new tree.
+     */
     private updateTreeInfo(
         base: BranchCommitInfo,
         newTreeSha: string,
@@ -230,6 +353,10 @@ class GitHubInteraction {
         };
     }
 
+    /**
+     * Converts a raw GitHub commit response into BranchCommitInfo.
+     * @param response - JSON response from POST /git/commits.
+     */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private updateCommitInfo(response: any): BranchCommitInfo {
         return {
@@ -240,6 +367,13 @@ class GitHubInteraction {
         };
     }
 
+    /**
+     * Fetches repository metadata (including default branch).
+     * @param owner - Repo owner.
+     * @param repo - Repo name.
+     * @returns RepoInfo JSON.
+     * @throws On HTTP errors.
+     */
     public async fetchRepoInfo(
         owner: string = this.getOwner(),
         repo: string = this.getRepo(),
@@ -256,6 +390,14 @@ class GitHubInteraction {
         return resp.json();
     }
 
+    /**
+     * Reads the current commit info for a branch.
+     * @param owner - Repo owner.
+     * @param repo - Repo name.
+     * @param branch - Branch name.
+     * @returns BranchCommitInfo or undefined if 404.
+     * @throws On non-404 HTTP errors.
+     */
     private async fetchBranchCommitInfo(
         owner: string,
         repo: string,
@@ -278,6 +420,13 @@ class GitHubInteraction {
         };
     }
 
+    /**
+     * Creates a new branch reference in the repository.
+     * @param owner - Repo owner.
+     * @param repo - Repo name.
+     * @param branch - New branch name.
+     * @param base - SHA of the base commit (usually default branch tip).
+     */
     private async createBranch(
         owner: string,
         repo: string,
@@ -302,6 +451,14 @@ class GitHubInteraction {
         }
     }
 
+    /**
+     * Creates a Git tree with the provided files on top of a base commit.
+     * @param owner - Repo owner.
+     * @param repo - Repo name.
+     * @param files - Array of [path, content] tuples.
+     * @param base - Base commit info.
+     * @returns Updated BranchCommitInfo pointing to new tree.
+     */
     private async createTreeWithFiles<T>(
         owner: string,
         repo: string,
@@ -335,6 +492,14 @@ class GitHubInteraction {
         return this.updateTreeInfo(base, data.tree.sha);
     }
 
+    /**
+     * Creates a Git commit from a tree.
+     * @param owner - Repo owner.
+     * @param repo - Repo name.
+     * @param message - Commit message.
+     * @param base - Info about the tree/parents.
+     * @returns BranchCommitInfo for the new commit.
+     */
     private async createCommitFromTree(
         owner: string,
         repo: string,
@@ -362,6 +527,13 @@ class GitHubInteraction {
         return this.updateCommitInfo(data);
     }
 
+    /**
+     * Updates a branch reference to point to a new commit SHA.
+     * @param owner - Repo owner.
+     * @param repo - Repo name.
+     * @param branch - Branch name to update.
+     * @param sha - New commit SHA.
+     */
     private async updateBranchRef(
         owner: string,
         repo: string,
@@ -384,4 +556,7 @@ class GitHubInteraction {
     }
 }
 
+/**
+ * Singleton instance of GitHubInteraction.
+ */
 export const github = new GitHubInteraction( "", "", "", "" ); //TODO needs to be initialised at some point, probably after logging in.
