@@ -1,6 +1,8 @@
 import { Database } from "../localStorage/database";
+import { createSignal } from "solid-js";
 
 interface RepoInfo {
+    owner: string;
     default_branch: string;
 }
 
@@ -10,46 +12,111 @@ interface BranchCommitInfo {
     parents: { sha: string }[];
 }
 
-export class GitHubService {
-    private activeRepo = "";
-    private activeOwner = "";
-    private activeAuth = "";
-    private activeBranch = "";
+export type UserInfo = {
+    login: string;
+    id: number;
+    avatar_url?: string;
+};
+
+export class GitHubInteraction {
+    private repo = "";
+    private owner = "";
+    private auth = "";
+    private branch = "";
+
+    public getBranch: () => string;
+    public setBranch: (v: string) => void;
+    public getRepo: () => string;
+    public setRepo: (v: string) => void;
+    public getOwner: () => string;
+    public setOwner: (v: string) => void;
+    public getAuth: () => string;
+    public setAuth: (v: string) => void;
 
     constructor(repo: string, owner: string, auth: string, branch: string) {
-        this.activeRepo = repo;
-        this.activeOwner = owner;
-        this.activeAuth = auth;
-        this.activeBranch = branch;
+        this.repo = repo;
+        this.owner = owner;
+        this.auth = auth;
+        this.branch = branch;
+        const [getRepoSignal, setRepoSignal] = createSignal(this.repo);
+        this.getRepo = getRepoSignal;
+        this.setRepo = setRepoSignal;
+        const [getOwnerSignal, setOwnerSignal] = createSignal(this.owner);
+        this.getOwner = getOwnerSignal;
+        this.setOwner = setOwnerSignal;
+        const [getAuthSignal, setAuthSignal] = createSignal(this.auth);
+        this.getAuth = getAuthSignal;
+        this.setAuth = setAuthSignal;
+        const [getBranchSignal, setBranchSignal] = createSignal(this.branch);
+        this.getBranch = getBranchSignal;
+        this.setBranch = setBranchSignal;
     }
 
-    get headers(): Record<string, string> {
+    private get headers(): Record<string, string> {
         return {
-            Authorization: `token ${this.activeAuth}`,
+            Authorization: `token ${this.auth}`,
             Accept: "application/vnd.github.v3+json",
             "Content-Type": "application/json",
         };
     }
 
-    setActiveOwner(owner: string) {
-        this.activeOwner = owner;
-    }
-    setActiveRepo(repo: string) {
-        this.activeRepo = repo;
-    }
-    setActiveBranch(branch: string) {
-        this.activeBranch = branch;
-    }
-    setActiveAuth(auth: string) {
-        this.activeAuth = auth;
+    public async fetchFiles(filePaths: string[]): Promise<string[]> {
+        try {
+            return await this.fetchFilesFromBranch(filePaths, this.getBranch());
+        } catch (e) {
+            console.log(
+                "unable to fetch file contents from current branch. " + e,
+            );
+        }
+        try {
+            const repoInfo = await this.loadRepoInfo(
+                this.getOwner(),
+                this.getRepo(),
+            );
+            return await this.fetchFilesFromBranch(
+                filePaths,
+                repoInfo.default_branch,
+            );
+        } catch (e) {
+            console.log(
+                "unable to fetch file contents from default branch. " + e,
+            );
+        }
+        throw new Error("Unable to fetch file contents.");
     }
 
-    async commitFiles<T>(message: string, files: [string, T][]): Promise<void> {
-        const {
-            activeOwner: owner,
-            activeRepo: repo,
-            activeBranch: branch,
-        } = this;
+    public async fetchFilesFromBranch(
+        filePaths: string[],
+        branchName: string,
+    ): Promise<string[]> {
+        const files: string[] = [];
+
+        filePaths.forEach(async (filePath) => {
+            files.push(await this.fetchFileFromBranch(filePath, branchName));
+        });
+
+        return files;
+    }
+
+    public async fetchFileFromBranch(
+        filePath: string,
+        branchName: string,
+    ): Promise<string> {
+        const url = `https://api.github.com/repos/${this.getOwner()}/${this.getRepo()}/contents/${encodeURIComponent(filePath)}?ref=${encodeURIComponent(branchName)}`;
+        const header = this.headers;
+        header.Accept = "application/vnd.github.v3.raw"; //why is this needed?
+        const resp = await fetch(url, { headers: header });
+        if (!resp.ok) {
+            throw new Error(`Error getting file from "${filePath}"! \n`);
+        }
+        return await resp.text();
+    }
+
+    public async commitFiles<T>(
+        message: string,
+        files: [string, T][],
+    ): Promise<void> {
+        const { owner: owner, repo: repo, branch: branch } = this;
 
         const baseCommit = await this.ensureBranchCommit(owner, repo, branch);
 
@@ -70,7 +137,7 @@ export class GitHubService {
         await this.updateBranchRef(owner, repo, branch, newCommit.sha);
     }
 
-    async commitFromDatabase<T>(
+    public async commitFromDatabase<T>(
         message: string,
         key: IDBValidKey,
         store: string,
@@ -86,7 +153,7 @@ export class GitHubService {
             await this.commitFiles<T>(message, [[key.toString(), file]]);
     }
 
-    async commitMultipleFromDatabase<T>(
+    public async commitMultipleFromDatabase<T>(
         message: string,
         keys: IDBValidKey[],
         store: string,
@@ -106,7 +173,7 @@ export class GitHubService {
         );
     }
 
-    async commitAllFromDatabase<T>(
+    public async commitAllFromDatabase<T>(
         message: string,
         store: string,
         database: Database,
