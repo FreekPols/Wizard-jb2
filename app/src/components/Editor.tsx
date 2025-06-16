@@ -82,9 +82,10 @@ export function useDispatchCommand() {
   const ctx = useContext(editorContext);
   if (!ctx) throw new Error("Editor context used outside of editor");
   return (cmd: Command) => {
-    const state = ctx.state();
+    const currentState =
+      typeof ctx.state === "function" ? ctx.state() : ctx.view().state;
     const view = ctx.view();
-    const result = cmd(state, view.dispatch, view);
+    const result = cmd(currentState, view.dispatch, view);
 
     view.focus();
     return result;
