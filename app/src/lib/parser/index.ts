@@ -91,8 +91,8 @@ export function findDefinitions(
 
 /** Parse raw MyST into a ProseMirror document.
  */
-export async function parseMyst(source: string): Promise<Node> {
-    const parsed = await parseToMystAST(source);
+export function parseMyst(source: string): Node {
+    const parsed = parseToMystAST(source);
     return mystToProseMirror(parsed);
 }
 

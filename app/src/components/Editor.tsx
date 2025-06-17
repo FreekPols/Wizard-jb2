@@ -242,7 +242,7 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
     if (!markdown) return;
 
     // Parse markdown into a ProseMirror Node
-    const doc = await parseMyst(markdown);
+    const doc = parseMyst(markdown);
 
     // Debugging
     // console.log("Parsed: \n" + doc);
@@ -285,7 +285,7 @@ export function getEditorContentAsMarkdown(): string {
     console.warn(" getEditorContentAsMarkdown: no view");
     return "";
   }
-  return prosemirrorToMarkdown(globalEditorView.state.doc);
+  return proseMirrorToMarkdown(globalEditorView.state.doc);
 }
 
 export async function saveEditorContentToDatabase() {
