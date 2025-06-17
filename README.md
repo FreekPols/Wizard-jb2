@@ -123,7 +123,7 @@ To make sure the editor actually works we have made a comprehensive test suite, 
 4. For a general overview of Vitest, please view the [Vitest guide](https://vitest.dev/guide/).
 
 ###  Unauthorized Access error
-If you get an unauthorizedAccess error when running tests, run this in the terminal and try again:
+If you get an `unauthorizedAccess` error when running tests, run this in the terminal and try again:
 ```shell
 `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process`
 ```
