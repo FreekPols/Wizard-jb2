@@ -4,11 +4,10 @@
 
 For parsing the Markdown to ProseMirror, we use [MySTMD].
 MystMD gives us an abstract syntax tree, which is defined by myst-spec. (Side
-note: myst-spec is typescript types converted from a JSON schema, giving aless
-than ideal type model for the AST.)
+note: myst-spec is typescript types converted from a JSON schema, giving a less-than-ideal type model for the AST, so we have to work around that in some cases.)
 
-We then have handlers for the MyST AST types, located in `index.ts`, which
-convert the nodes to their corresponding ProseMirror nodes.
+We then have handlers for the MyST AST types, located in `myst_to_prosemirror.ts`, which
+convert the nodes to their corresponding ProseMirror nodes. And vice versa for `prosemirror_to_myst.ts`
 
 ProseMirror handles links, bold or emphasized text and other 'marks', as they
 are called by the ProseMirror documentation, differently than the MyST AST.
