@@ -9,7 +9,6 @@ export const ToolbarDropdownWithLabels: Component<{
   let buttonRef: HTMLButtonElement | undefined;
   let menuRef: HTMLUListElement | undefined;
 
-  // Close dropdown when clicking outside
   onMount(() => {
     const handler = (e: MouseEvent) => {
       if (
@@ -20,7 +19,6 @@ export const ToolbarDropdownWithLabels: Component<{
         !menuRef.contains(e.target as Node)
       ) {
         setOpen(false);
-        if (buttonRef) buttonRef.style.background = "#fff";
       }
     };
     document.addEventListener("mousedown", handler);
@@ -57,11 +55,6 @@ export const ToolbarDropdownWithLabels: Component<{
         ref={menuRef}
         class="dropdown-menu p-0"
         classList={{ show: open() }}
-        style={{
-          "min-width": "40px",
-          top: "100%",
-          left: "0",
-        }}
       >
         {props.options.map((opt) => (
           <li>
@@ -72,10 +65,9 @@ export const ToolbarDropdownWithLabels: Component<{
               onClick={() => {
                 opt.onClick();
                 setOpen(false);
-                if (buttonRef) buttonRef.style.background = "#fff";
               }}
             >
-              <i class={`bi ${opt.icon}`} style={{ color: "#212529" }} />
+              <i class={`bi ${opt.icon}`} />
               <span class="toolbar-dropdown-label">{opt.label}</span>
             </button>
           </li>

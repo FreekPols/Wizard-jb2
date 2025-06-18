@@ -1,7 +1,7 @@
 import katex from "katex";
 import { NodeView, EditorView } from "prosemirror-view";
 import { Node as ProseMirrorNode } from "prosemirror-model";
-import { showHintTooltip, hideHintTooltip } from "../ui/HintTooltip";
+import { showHintTooltip, hideHintTooltip } from "../HintTooltip";
 
 export class MathNodeView implements NodeView {
     dom: HTMLElement;
@@ -29,7 +29,6 @@ export class MathNodeView implements NodeView {
                 "Double click to edit inline\nCtrl + Backspace to delete",
                 rect.bottom + window.scrollY + 10,
                 rect.left + window.scrollX + rect.width / 2,
-                false,
             );
         });
         this.renderSpan.addEventListener("mouseleave", hideHintTooltip);
@@ -45,16 +44,6 @@ export class MathNodeView implements NodeView {
         const textarea = document.createElement("textarea");
         textarea.value = node.textContent;
         textarea.className = "math-input";
-        textarea.style.marginRight = "8px";
-        textarea.style.width = "100%";
-        textarea.style.maxWidth = "100%";
-        textarea.style.minWidth = "200px";
-        textarea.style.boxSizing = "border-box";
-        textarea.style.overflowX = "hidden"; // No horizontal scroll
-        textarea.style.overflowY = "auto"; // Only vertical scroll
-        textarea.style.resize = "none";
-        textarea.style.whiteSpace = "pre-wrap";
-        textarea.style.wordBreak = "break-all";
         textarea.rows = 1;
 
         // Auto-grow up to 3 lines

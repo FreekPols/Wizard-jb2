@@ -27,7 +27,6 @@ export const ToolbarDropdown: Component<{
         !menuRef.contains(e.target as Node)
       ) {
         setOpen(false);
-        if (buttonRef) buttonRef.style.background = "#fff";
       }
     };
     document.addEventListener("mousedown", handler);
@@ -56,10 +55,6 @@ export const ToolbarDropdown: Component<{
           e.stopPropagation();
           setOpen(!open());
         }}
-        onMouseOver={(e) => (e.currentTarget.style.background = "var(--accent)")}
-        onMouseOut={(e) =>
-          !open() && (e.currentTarget.style.background = "#fff")
-        }
       >
         <i class={`bi ${props.icon} fs-5`} />
       </button>
@@ -67,11 +62,6 @@ export const ToolbarDropdown: Component<{
         ref={menuRef}
         class="dropdown-menu p-0"
         classList={{ show: open() }}
-        style={{
-          "min-width": "40px",
-          top: "100%",
-          left: "0",
-        }}
       >
         {props.options.map((opt) => (
           <li>
@@ -82,10 +72,9 @@ export const ToolbarDropdown: Component<{
               onClick={() => {
                 opt.onClick();
                 setOpen(false);
-                if (buttonRef) buttonRef.style.background = "#fff";
               }}
             >
-              <i class={`bi ${opt.icon}`} style={{ color: "#212529" }} />
+              <i class={`bi ${opt.icon}`} />
               {opt.label && (
                 <span class="toolbar-dropdown-label">{opt.label}</span>
               )}

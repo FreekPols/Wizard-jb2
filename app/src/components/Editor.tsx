@@ -34,7 +34,7 @@ import {
   mathDeleteKeymap,
   tableAfterDeleteKeymap,
   preserveMarksPlugin,
-} from "./toolbar/logic/editor_plugins";
+} from "../lib/toolbar/editor_plugins";
 import { tableEditing } from "prosemirror-tables";
 import { github } from "../lib/github/githubInteraction";
 

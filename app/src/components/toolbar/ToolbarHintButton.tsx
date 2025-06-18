@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { showHintTooltip, hideHintTooltip } from "../ui/HintTooltip";
+import { showHintTooltip, hideHintTooltip } from "./HintTooltip";
 
 export const ToolbarHintButton: Component<{
   label: string;

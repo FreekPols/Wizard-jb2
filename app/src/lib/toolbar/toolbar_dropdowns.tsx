@@ -1,6 +1,6 @@
 /* eslint-disable solid/prefer-for */
 import { createSignal, JSX, Show } from "solid-js";
-import { useEditorState, useDispatchCommand } from "../../Editor";
+import { useEditorState, useDispatchCommand } from "../../components/Editor";
 import {
   setParagraph,
   setHeading,
@@ -11,9 +11,9 @@ import {
   insertMath,
   insertTable,
 } from "./toolbar_commands";
-import { ToolbarDropdownWithLabels } from "../components/ToolbarDropdownWithLabels";
-import { ToolbarDropdown } from "../components/ToolbarDropdown";
-import { TableGridSelector } from "../components/TableGridSelector";
+import { ToolbarDropdownWithLabels } from "../../components/toolbar/ToolbarDropdownWithLabels";
+import { ToolbarDropdown } from "../../components/toolbar/ToolbarDropdown";
+import { TableGridSelector } from "../../components/toolbar/TableGridSelector";
 import { getCurrentListType } from "./toolbar_utils";
 
 // Header (heading) options for the header dropdown, with live preview labels

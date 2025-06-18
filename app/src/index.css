@@ -102,7 +102,7 @@ a {
 .toolbar-btn,
 .btn.btn-sm.px-1,
 .btn.btn-sm.dropdown-toggle {
-  background: var(--button-bg);
+  background: transparent;
   color: var(--button-fg);
   border: none;
   border-radius: var(--button-radius, 4px);
@@ -173,7 +173,14 @@ a {
   color: var(--button-fg);
 }
 
-/* === Hint Tooltip === */
+/* === Hint Tooltip Popup === */
+.hint-tooltip-popup {
+  position: absolute;
+  z-index: 99999;
+  pointer-events: none;
+}
+
+/* === Hint Tooltip Box === */
 .hint-tooltip {
   background: var(--button-bg);
   color: var(--accent-dark);
@@ -221,6 +228,13 @@ a {
   position: relative;
   display: inline-block;
   vertical-align: middle;
+}
+
+.image-node img {
+  cursor: pointer;
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 .resize-handle {

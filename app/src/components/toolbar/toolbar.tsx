@@ -2,11 +2,10 @@ import { Component } from "solid-js";
 import "prosemirror-view/style/prosemirror.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { ToolbarSeparator } from "./components/ToolbarSeparator";
-import { toolbarButtons } from "./logic/toolbar_buttons";
-import { toolbarDropdowns } from "./logic/toolbar_dropdowns";
+import { toolbarButtons } from "../../lib/toolbar/toolbar_buttons";
+import { toolbarDropdowns } from "../../lib/toolbar/toolbar_dropdowns";
 import { GitHubDropdown } from "../github/GitHubDropdown";
-import { ToolbarHintButton } from "./components/ToolbarHintButton";
+import { ToolbarHintButton } from "./ToolbarHintButton";
 import { BranchDropdown } from "../github/BranchDropdown";
 
 // --- Main Toolbar Component ---
@@ -29,25 +28,25 @@ export const Toolbar: Component = () => {
     >
       {toolbarButtons.undoButton}
       {toolbarButtons.redoButton}
-      <ToolbarSeparator />
+      <div class="toolbar-separator" />
       {toolbarButtons.formatButton}
-      <ToolbarSeparator />
+      <div class="toolbar-separator" />
       {toolbarButtons.boldButton}
       {toolbarButtons.italicsButton}
       {toolbarButtons.strikeThroughButton}
       {toolbarButtons.superscriptButton}
       {toolbarButtons.subscriptButton}
-      <ToolbarSeparator />
+      <div class="toolbar-separator" />
       {toolbarDropdowns.headerDropdown}
-      <ToolbarSeparator />
+      <div class="toolbar-separator" />
       {toolbarDropdowns.listDropdown}
       {toolbarButtons.indentButton}
       {toolbarButtons.outdentButton}
       {toolbarButtons.quoteButton}
       {toolbarButtons.codeButton}
-      <ToolbarSeparator />
+      <div class="toolbar-separator" />
       {toolbarDropdowns.insertDropdown}
-      <ToolbarSeparator />
+      <div class="toolbar-separator" />
       <ToolbarHintButton
         label="Editor usage hints"
         hint={
