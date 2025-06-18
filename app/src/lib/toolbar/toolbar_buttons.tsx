@@ -11,12 +11,12 @@ import {
   toggleSubscript,
   toggleSuperscript,
 } from "./toolbar_commands";
-import { markActive } from "./toolbar_utils";
+import { copyFormatPainter, applyFormatPainter, FormatPainterState } from "./toolbar_utils";
 import { useDispatchCommand, useEditorState } from "../../components/Editor";
 import { ToolbarButton } from "../../components/toolbar/ToolbarButton";
 import { createSignal, JSX } from "solid-js";
 import { Mark } from "prosemirror-model";
-import { EditorState, Transaction } from "prosemirror-state";
+import { markActive } from "./toolbar_utils";
 
 function buttonValuesToJSXElement(buttonValues: {
   icon: string;
@@ -52,44 +52,23 @@ export const toolbarButtons: {
   createButtons() {
     const editorStateAccessor = useEditorState();
     const dispatchCommand = useDispatchCommand();
-    const [formatMarks, setFormatMarks] = createSignal<Mark[] | null>(null);
+    const [_formatMarks, _setFormatMarks] = createSignal<Mark[] | null>(null);
+    const [formatPainter, setFormatPainter] = createSignal<FormatPainterState>(
+      null,
+    );
 
     // Handles Format Painter button: copy or apply formatting
     function handleFormatPainter() {
       const state = editorStateAccessor && editorStateAccessor();
       if (!state) return;
 
-      if (!formatMarks()) {
-        // Copy: Save current marks at cursor or selection start
-        const marks = state.storedMarks || state.selection.$from.marks();
-        setFormatMarks(marks.length ? Array.from(marks) : null);
+      if (formatPainter() === null) {
+        setFormatPainter(copyFormatPainter(state));
       } else {
-        // Paste: Apply saved marks to selection or cursor
-        const marks = formatMarks();
-        if (!marks) return;
-        const { from, to, empty } = state.selection;
-        if (empty) {
-          // Set stored marks for next input
-          dispatchCommand(
-            (state: EditorState, dispatch?: (tr: Transaction) => void) => {
-              if (dispatch) dispatch(state.tr.setStoredMarks(marks));
-              return true;
-            },
-          );
-        } else {
-          // Add marks to selection
-          dispatchCommand(
-            (state: EditorState, dispatch?: (tr: Transaction) => void) => {
-              let tr = state.tr;
-              marks.forEach((mark) => {
-                tr = tr.addMark(from, to, mark);
-              });
-              if (dispatch) dispatch(tr);
-              return true;
-            },
-          );
-        }
-        setFormatMarks(null);
+        dispatchCommand((state, dispatch) =>
+          applyFormatPainter(formatPainter(), state, dispatch)
+        );
+        setFormatPainter(null);
       }
     }
 
@@ -109,7 +88,7 @@ export const toolbarButtons: {
       icon: "bi-brush",
       label: "Format Painter",
       onClick: () => handleFormatPainter(),
-      active: () => !!formatMarks(),
+      active: () => formatPainter() !== null,
     });
     this.boldButton = buttonValuesToJSXElement({
       icon: "bi-type-bold",

@@ -305,3 +305,25 @@ a {
   font-size: 13px;
   color: #333;
 }
+
+/* === Toolbar Header Option Labels === */
+.toolbar-header-option-h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+}
+.toolbar-header-option-h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+}
+.toolbar-header-option-h3 {
+  font-size: 18.72px;
+  font-weight: 700;
+  margin: 0;
+}
+.toolbar-header-option-normal {
+  font-size: 16px;
+  font-weight: 400;
+  margin: 0;
+}

@@ -19,19 +19,19 @@ import { getCurrentListType } from "./toolbar_utils";
 // Header (heading) options for the header dropdown, with live preview labels
 export const HEADER_OPTIONS: { label: JSX.Element; value: number | string }[] = [
   {
-    label: <span style={{ "font-size": "32px", "font-weight": 700, margin: 0 }}>Heading 1</span>,
+    label: <span class="toolbar-header-option-h1">Heading 1</span>,
     value: 1,
   },
   {
-    label: <span style={{ "font-size": "24px", "font-weight": 700, margin: 0 }}>Heading 2</span>,
+    label: <span class="toolbar-header-option-h2">Heading 2</span>,
     value: 2,
   },
   {
-    label: <span style={{ "font-size": "18.72px", "font-weight": 700, margin: 0 }}>Heading 3</span>,
+    label: <span class="toolbar-header-option-h3">Heading 3</span>,
     value: 3,
   },
   {
-    label: <span style={{ "font-size": "16px", "font-weight": 400, margin: 0 }}>Normal</span>,
+    label: <span class="toolbar-header-option-normal">Normal</span>,
     value: "paragraph",
   },
 ];

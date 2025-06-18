@@ -32,8 +32,10 @@ import {
   tableAndCodeExitKeymap,
   codeBlockKeymap,
   mathDeleteKeymap,
-  tableAfterDeleteKeymap,
+  //tableAfterDeleteKeymap,
   preserveMarksPlugin,
+  formattingKeymap,
+  tableDeleteKeymap,
 } from "../lib/toolbar/editor_plugins";
 import { tableEditing } from "prosemirror-tables";
 import { github } from "../lib/github/githubInteraction";
@@ -123,10 +125,11 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
         history(),
         customListKeymap(props.schema),
         preserveMarksPlugin(),
-        tableAndCodeExitKeymap(props.schema),
         codeBlockKeymap(props.schema),
+        tableAndCodeExitKeymap(props.schema),
         mathDeleteKeymap(props.schema),
-        tableAfterDeleteKeymap(props.schema),
+        tableDeleteKeymap(),
+        //tableAfterDeleteKeymap(props.schema),
         tableEditing(),
         keymap({
           "Mod-z": undo,
@@ -134,6 +137,7 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
           "Mod-Shift-z": redo,
         }),
         keymap(baseKeymap),
+        formattingKeymap(props.schema),
         new Plugin({
           view() {
             return {
