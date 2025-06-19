@@ -1,6 +1,9 @@
-/* eslint-disable solid/prefer-for */
 import { createSignal, JSX, Show } from "solid-js";
-import { useEditorState, useDispatchCommand, EditorContextType } from "../../components/Editor";
+import {
+  useEditorState,
+  useDispatchCommand,
+  EditorContextType,
+} from "../../components/Editor";
 import {
   setParagraph,
   setHeading,
@@ -16,24 +19,25 @@ import { TableGridSelector } from "../../components/toolbar/TableGridSelector";
 import { getCurrentListType } from "./toolbar_utils";
 
 // Header (heading) options for the header dropdown, with live preview labels
-export const HEADER_OPTIONS: { label: JSX.Element; value: number | string }[] = [
-  {
-    label: <span class="toolbar-header-option-h1">Heading 1</span>,
-    value: 1,
-  },
-  {
-    label: <span class="toolbar-header-option-h2">Heading 2</span>,
-    value: 2,
-  },
-  {
-    label: <span class="toolbar-header-option-h3">Heading 3</span>,
-    value: 3,
-  },
-  {
-    label: <span class="toolbar-header-option-normal">Normal</span>,
-    value: "paragraph",
-  },
-];
+export const HEADER_OPTIONS: { label: JSX.Element; value: number | string }[] =
+  [
+    {
+      label: <span class="toolbar-header-option-h1">Heading 1</span>,
+      value: 1,
+    },
+    {
+      label: <span class="toolbar-header-option-h2">Heading 2</span>,
+      value: 2,
+    },
+    {
+      label: <span class="toolbar-header-option-h3">Heading 3</span>,
+      value: 3,
+    },
+    {
+      label: <span class="toolbar-header-option-normal">Normal</span>,
+      value: "paragraph",
+    },
+  ];
 
 // --- Signals for Table Grid Selector popup state and position ---
 const [showTableSelector, setShowTableSelector] = createSignal(false);
@@ -65,7 +69,7 @@ export const toolbarDropdowns: {
   createDropdowns: (ctx: EditorContextType) => void;
 } = {
   createDropdowns(ctx: EditorContextType) {
-    const { state, openDropdown, setOpenDropdown } = ctx;
+    const { openDropdown } = ctx;
     const editorStateAccessor = useEditorState();
     const dispatchCommand = useDispatchCommand();
 

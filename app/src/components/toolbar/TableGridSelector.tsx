@@ -1,4 +1,4 @@
-import { JSX } from "solid-js";
+import { JSX, For } from "solid-js";
 
 export interface TableGridSelectorProps {
   show: boolean;
@@ -33,34 +33,38 @@ export function TableGridSelector(props: TableGridSelectorProps): JSX.Element {
         top: `${props.position.top}px`,
         left: `${props.position.left}px`,
       }}
-      onMouseDown={e => {
+      onMouseDown={(e) => {
         e.preventDefault();
         e.stopPropagation();
       }}
       onMouseLeave={props.onClose}
     >
       <div class="table-grid-selector-grid">
-        {[...Array(8)].map((_, r) => (
-          <div class="table-grid-selector-row">
-            {[...Array(8)].map((_, c) => {
-              const selected = r <= props.hoverY && c <= props.hoverX;
-              return (
-                <div
-                  class={`table-grid-selector-cell${selected ? " selected" : ""}`}
-                  onMouseEnter={() => {
-                    props.setHoverY(r);
-                    props.setHoverX(c);
-                  }}
-                  onMouseDown={e => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    props.onSelect(r + 1, c + 1);
-                  }}
-                />
-              );
-            })}
-          </div>
-        ))}
+        <For each={[...Array(8)]}>
+          {(_, r) => (
+            <div class="table-grid-selector-row">
+              <For each={[...Array(8)]}>
+                {(_, c) => {
+                  const selected = r() <= props.hoverY && c() <= props.hoverX;
+                  return (
+                    <div
+                      class={`table-grid-selector-cell${selected ? " selected" : ""}`}
+                      onMouseEnter={() => {
+                        props.setHoverY(r());
+                        props.setHoverX(c());
+                      }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        props.onSelect(r() + 1, c() + 1);
+                      }}
+                    />
+                  );
+                }}
+              </For>
+            </div>
+          )}
+        </For>
       </div>
       <div class="table-grid-selector-label">
         {props.hoverY + 1} × {props.hoverX + 1}

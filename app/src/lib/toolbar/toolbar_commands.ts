@@ -15,7 +15,6 @@ import {
 } from "prosemirror-schema-list";
 import { getCurrentListType } from "./toolbar_utils";
 
-
 // === MARK COMMANDS ===
 export const toggleBold = toggleMark(schema.marks.strong);
 export const toggleItalic = toggleMark(schema.marks.emphasis);
@@ -145,7 +144,6 @@ export function toggleBlockquote(
         return wrapIn(schema.nodes.blockquote)(state, dispatch);
     }
 }
-
 
 /**
  * Toggles a code block for the current selection.

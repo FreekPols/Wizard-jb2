@@ -62,13 +62,13 @@ export function preserveMarksPlugin(): Plugin {
  * @returns {Plugin} Keymap plugin for formatting.
  */
 export function formattingKeymap(_schema: Schema): Plugin {
-  return keymap({
-    "Mod-b": toggleBold,
-    "Mod-i": toggleItalic,
-    "Mod-Shift-x": toggleStrikethrough,
-    "Mod-.": toggleSuperscript,
-    "Mod-,": toggleSubscript,
-  });
+    return keymap({
+        "Mod-b": toggleBold,
+        "Mod-i": toggleItalic,
+        "Mod-Shift-x": toggleStrikethrough,
+        "Mod-.": toggleSuperscript,
+        "Mod-,": toggleSubscript,
+    });
 }
 
 /**
@@ -94,23 +94,21 @@ export function customListKeymap(schema: Schema): Plugin {
  * @param {Schema} schema - The ProseMirror schema.
  * @returns {Plugin} Keymap plugin for exiting blocks.
  */
-export function tableAndCodeExitKeymap(schema: Schema): Plugin {
-  return keymap({
-    "Mod-Enter": chainCommands(
-      (state, dispatch) => {
-        if (inLastTableCell(state)) {
-          return insertParagraphAfterTable()(state, dispatch);
-        }
-        if (state.selection.$from.parent.type.name === "code_block") {
-          return insertParagraphAfterCodeBlock()(state, dispatch);
-        }
-        if (state.selection.$from.parent.type.name === "blockquote") {
-          return insertParagraphAfterBlockquote()(state, dispatch);
-        }
-        return false;
-      }
-    ),
-  });
+export function tableAndCodeExitKeymap(_schema: Schema): Plugin {
+    return keymap({
+        "Mod-Enter": chainCommands((state, dispatch) => {
+            if (inLastTableCell(state)) {
+                return insertParagraphAfterTable()(state, dispatch);
+            }
+            if (state.selection.$from.parent.type.name === "code_block") {
+                return insertParagraphAfterCodeBlock()(state, dispatch);
+            }
+            if (state.selection.$from.parent.type.name === "blockquote") {
+                return insertParagraphAfterBlockquote()(state, dispatch);
+            }
+            return false;
+        }),
+    });
 }
 
 /**
@@ -199,9 +197,7 @@ export function codeBlockKeymap(schema: Schema): Plugin {
             if (dispatch) {
                 dispatch(
                     state.tr
-                        .replaceSelectionWith(
-                            schema.nodes.break.create(),
-                        )
+                        .replaceSelectionWith(schema.nodes.break.create())
                         .scrollIntoView(),
                 );
             }

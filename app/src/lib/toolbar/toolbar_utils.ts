@@ -5,9 +5,9 @@ import { setBlockType } from "prosemirror-commands";
 import { TableMap } from "prosemirror-tables";
 
 export type FormatPainterState = {
-  marks: Mark[];
-  blockType: NodeType;
-  blockAttrs: Record<string, any>;
+    marks: Mark[];
+    blockType: NodeType;
+    blockAttrs: Record<string, string | number | boolean | null>;
 } | null;
 
 /**
@@ -16,15 +16,15 @@ export type FormatPainterState = {
  * @returns {FormatPainterState} The copied formatting state.
  */
 export function copyFormatPainter(state: EditorState): FormatPainterState {
-  const marks = state.storedMarks || state.selection.$from.marks();
-  const $from = state.selection.$from;
-  const blockType = $from.parent.type;
-  const blockAttrs = { ...$from.parent.attrs };
-  return {
-    marks: Array.isArray(marks) ? Array.from(marks) : [],
-    blockType,
-    blockAttrs,
-  };
+    const marks = state.storedMarks || state.selection.$from.marks();
+    const $from = state.selection.$from;
+    const blockType = $from.parent.type;
+    const blockAttrs = { ...$from.parent.attrs };
+    return {
+        marks: Array.isArray(marks) ? Array.from(marks) : [],
+        blockType,
+        blockAttrs,
+    };
 }
 
 /**
@@ -35,46 +35,45 @@ export function copyFormatPainter(state: EditorState): FormatPainterState {
  * @returns {boolean} True if formatting was applied.
  */
 export function applyFormatPainter(
-  painter: FormatPainterState,
-  state: EditorState,
-  dispatch?: (tr: Transaction) => void
+    painter: FormatPainterState,
+    state: EditorState,
+    dispatch?: (tr: Transaction) => void,
 ): boolean {
-  if (!painter) return false;
-  const { marks, blockType, blockAttrs } = painter;
-  const { from, to, empty } = state.selection;
-  let tr = state.tr;
+    if (!painter) return false;
+    const { marks, blockType, blockAttrs } = painter;
+    const { from, to, empty } = state.selection;
+    let tr = state.tr;
 
-  if (empty) {
-    if (dispatch) dispatch(tr.setStoredMarks(marks));
-    return true;
-  } else {
-    // Change block type for all blocks in selection
-    const $from = state.doc.resolve(from);
-    const $to = state.doc.resolve(to);
-    for (let d = $from.depth; d >= 0; d--) {
-      const node = $from.node(d);
-      if (node.isTextblock && node.type !== blockType) {
-        // Try to set block type for the whole selection
-        const setBlock = setBlockType(blockType, blockAttrs);
-        if (setBlock(state, dispatch)) {
-          // Block type changed, now apply marks
-          break;
-        }
-      }
-    }
-    // Remove all marks if none, else add marks
-    if (marks.length === 0) {
-      Object.values(state.schema.marks).forEach((markType) => {
-        tr = tr.removeMark(from, to, markType);
-      });
+    if (empty) {
+        if (dispatch) dispatch(tr.setStoredMarks(marks));
+        return true;
     } else {
-      marks.forEach((mark) => {
-        tr = tr.addMark(from, to, mark);
-      });
+        // Change block type for all blocks in selection
+        const $from = state.doc.resolve(from);
+        for (let d = $from.depth; d >= 0; d--) {
+            const node = $from.node(d);
+            if (node.isTextblock && node.type !== blockType) {
+                // Try to set block type for the whole selection
+                const setBlock = setBlockType(blockType, blockAttrs);
+                if (setBlock(state, dispatch)) {
+                    // Block type changed, now apply marks
+                    break;
+                }
+            }
+        }
+        // Remove all marks if none, else add marks
+        if (marks.length === 0) {
+            Object.values(state.schema.marks).forEach((markType) => {
+                tr = tr.removeMark(from, to, markType);
+            });
+        } else {
+            marks.forEach((mark) => {
+                tr = tr.addMark(from, to, mark);
+            });
+        }
+        if (dispatch) dispatch(tr);
+        return true;
     }
-    if (dispatch) dispatch(tr);
-    return true;
-  }
 }
 
 /**
@@ -170,24 +169,24 @@ export function insertParagraphAfterCodeBlock() {
  * @returns {Command} ProseMirror command for insertion.
  */
 export function insertParagraphAfterBlockquote() {
-  return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
-    const { $from } = state.selection;
-    for (let d = $from.depth; d > 0; d--) {
-      const node = $from.node(d);
-      if (node.type.name === "blockquote") {
-        const pos = $from.after(d);
-        if (dispatch) {
-          const paragraph = state.schema.nodes.paragraph.create();
-          let tr = state.tr.insert(pos, paragraph);
-          const sel = Selection.near(tr.doc.resolve(pos + 1));
-          tr = tr.setSelection(sel);
-          dispatch(tr.scrollIntoView());
+    return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+        const { $from } = state.selection;
+        for (let d = $from.depth; d > 0; d--) {
+            const node = $from.node(d);
+            if (node.type.name === "blockquote") {
+                const pos = $from.after(d);
+                if (dispatch) {
+                    const paragraph = state.schema.nodes.paragraph.create();
+                    let tr = state.tr.insert(pos, paragraph);
+                    const sel = Selection.near(tr.doc.resolve(pos + 1));
+                    tr = tr.setSelection(sel);
+                    dispatch(tr.scrollIntoView());
+                }
+                return true;
+            }
         }
-        return true;
-      }
-    }
-    return false;
-  };
+        return false;
+    };
 }
 
 /**

@@ -13,11 +13,7 @@ export const [hintTooltip, setHintTooltip] = createSignal<{
  * @param top - The top position (in pixels) for the tooltip.
  * @param left - The left position (in pixels) for the tooltip.
  */
-export function showHintTooltip(
-  text: string,
-  top: number,
-  left: number,
-) {
+export function showHintTooltip(text: string, top: number, left: number) {
   setHintTooltip({ text, top, left, visible: true });
 }
 

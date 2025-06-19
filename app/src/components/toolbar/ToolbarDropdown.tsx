@@ -1,4 +1,11 @@
-import { Component, createSignal, onMount, onCleanup, JSX } from "solid-js";
+import {
+  Component,
+  createSignal,
+  onMount,
+  onCleanup,
+  JSX,
+  For,
+} from "solid-js";
 
 /**
  * ToolbarDropdown renders a dropdown menu for toolbar actions.
@@ -14,7 +21,11 @@ import { Component, createSignal, onMount, onCleanup, JSX } from "solid-js";
  */
 export const ToolbarDropdown: Component<{
   icon: string;
-  options: { label?: JSX.Element | string; icon: string; onClick: () => void }[];
+  options: {
+    label?: JSX.Element | string;
+    icon: string;
+    onClick: () => void;
+  }[];
   title?: string | JSX.Element;
   children?: JSX.Element;
   showTableSelector?: () => boolean;
@@ -81,27 +92,29 @@ export const ToolbarDropdown: Component<{
         }`}
         classList={{ show: open() }}
       >
-        {props.options.map((opt) => (
-          <li>
-            <button
-              type="button"
-              class="dropdown-item d-flex align-items-center justify-content-center"
-              title={typeof opt.label === "string" ? opt.label : undefined}
-              onClick={() => {
-                opt.onClick();
-                if (opt.icon !== "bi-table") {
-                  setOpen(false);
-                }
-                // If it's the Insert Table option, keep the dropdown open so the grid selector can show
-              }}
-            >
-              <i class={`bi ${opt.icon}`} />
-              {opt.label && (
-                <span class="toolbar-dropdown-label">{opt.label}</span>
-              )}
-            </button>
-          </li>
-        ))}
+        <For each={props.options}>
+          {(opt) => (
+            <li>
+              <button
+                type="button"
+                class="dropdown-item d-flex align-items-center justify-content-center"
+                title={typeof opt.label === "string" ? opt.label : undefined}
+                onClick={() => {
+                  opt.onClick();
+                  if (opt.icon !== "bi-table") {
+                    setOpen(false);
+                  }
+                  // If it's the Insert Table option, keep the dropdown open so the grid selector can show
+                }}
+              >
+                <i class={`bi ${opt.icon}`} />
+                {opt.label && (
+                  <span class="toolbar-dropdown-label">{opt.label}</span>
+                )}
+              </button>
+            </li>
+          )}
+        </For>
         {props.children}
       </ul>
     </div>

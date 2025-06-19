@@ -10,11 +10,10 @@ import {
   toggleSuperscript,
   toggleCodeBlock,
 } from "./toolbar_commands";
-import { copyFormatPainter, applyFormatPainter, FormatPainterState } from "./toolbar_utils";
-import { EditorContextType, useDispatchCommand, useEditorState } from "../../components/Editor";
+import { copyFormatPainter, applyFormatPainter } from "./toolbar_utils";
+import { EditorContextType, useDispatchCommand } from "../../components/Editor";
 import { ToolbarButton } from "../../components/toolbar/ToolbarButton";
-import { createSignal, JSX } from "solid-js";
-import { Mark } from "prosemirror-model";
+import { JSX } from "solid-js";
 import { markActive, blockquoteActive } from "./toolbar_utils";
 
 function buttonValuesToJSXElement(buttonValues: {
@@ -82,8 +81,9 @@ export const toolbarButtons: {
       if (formatPainter() === null) {
         setFormatPainter(copyFormatPainter(s));
       } else {
-        dispatchCommand((state: any, dispatch: any) =>
-          applyFormatPainter(formatPainter(), state, dispatch)
+        dispatchCommand(
+          (state: EditorState, dispatch: (tr: Transaction) => void) =>
+            applyFormatPainter(formatPainter(), state, dispatch),
         );
         setFormatPainter(null);
       }
@@ -153,8 +153,7 @@ export const toolbarButtons: {
       icon: "bi-blockquote-left",
       label: "Blockquote",
       onClick: () => dispatchCommand(toggleBlockquote),
-      active: () =>
-        state ? blockquoteActive(state()) : false,
+      active: () => (state ? blockquoteActive(state()) : false),
     });
     this.codeButton = buttonValuesToJSXElement({
       icon: "bi-code",

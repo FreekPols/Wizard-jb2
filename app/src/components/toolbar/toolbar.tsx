@@ -54,13 +54,11 @@ export const Toolbar: Component = () => {
       <div class="toolbar-separator" />
       <ToolbarHintButton
         label="Editor usage hints"
-        hint={
-          `Ctrl + Enter: Exit table in new line
+        hint={`Ctrl + Enter: Exit table in new line
           Ctrl + Enter: Exit quote/codeblock
           Double click math: Edit inline
           Ctrl + Backspace: Delete math equation
-          Ctrl + Backspace: Delete codeblock`
-        }
+          Ctrl + Backspace: Delete codeblock`}
       />
       <div class="ms-auto d-flex align-items-right">
         <BranchDropdown />

@@ -144,8 +144,11 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
   state = stateSignal;
   setState = setStateSignal;
 
-  const [viewSignal, setView] = createSignal<EditorView>(null as unknown as EditorView);
-  const [formatPainter, setFormatPainter] = createSignal<FormatPainterState>(null);
+  const [viewSignal, setView] = createSignal<EditorView>(
+    null as unknown as EditorView,
+  );
+  const [formatPainter, setFormatPainter] =
+    createSignal<FormatPainterState>(null);
   const [openDropdown, setOpenDropdown] = createSignal<string | null>(null);
 
   const editorState = createMemo(() =>
@@ -181,36 +184,34 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
     }),
   );
 
-  const view = createMemo(
-    () => {
-      const v = new EditorView(ref()!, {
-        state: editorState(),
-        nodeViews: {
-          math(node, view, getPos) {
-            const safeGetPos = () => {
-              const pos = getPos?.();
-              if (typeof pos !== "number") {
-                throw new Error("getPos is undefined or not a number");
-              }
-              return pos;
-            };
-            return new MathNodeView(node, view, safeGetPos);
-          },
-          image(node, view, getPos) {
-            const safeGetPos = () => {
-              const pos = getPos?.();
-              if (typeof pos !== "number")
-                throw new Error("getPos is undefined or not a number");
-              return pos;
-            };
-            return new ImageNodeView(node, view, safeGetPos);
-          },
+  const view = createMemo(() => {
+    const v = new EditorView(ref()!, {
+      state: editorState(),
+      nodeViews: {
+        math(node, view, getPos) {
+          const safeGetPos = () => {
+            const pos = getPos?.();
+            if (typeof pos !== "number") {
+              throw new Error("getPos is undefined or not a number");
+            }
+            return pos;
+          };
+          return new MathNodeView(node, view, safeGetPos);
         },
-      });
-      setView(v); // <-- This ensures viewSignal is always the real view
-      return v;
-    },
-  );
+        image(node, view, getPos) {
+          const safeGetPos = () => {
+            const pos = getPos?.();
+            if (typeof pos !== "number")
+              throw new Error("getPos is undefined or not a number");
+            return pos;
+          };
+          return new ImageNodeView(node, view, safeGetPos);
+        },
+      },
+    });
+    setView(v); // <-- This ensures viewSignal is always the real view
+    return v;
+  });
   onCleanup(() => view().destroy());
 
   onMount(() => {
