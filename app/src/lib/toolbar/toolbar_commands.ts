@@ -24,7 +24,7 @@ export const toggleInlineCode = toggleMark(schema.marks.code);
 
 // === BLOCK COMMANDS ===
 export const setBlockquote = wrapIn(schema.nodes.blockquote);
-export const setCodeBlock = setBlockType(schema.nodes.code);
+export const setCodeBlock = setBlockType(schema.nodes.code_block);
 export function setHeading(level: number) {
     return setBlockType(schema.nodes.heading, { level });
 }
@@ -128,7 +128,7 @@ export function toggleCodeBlock(
     let allCode = true;
 
     state.doc.nodesBetween(from, to, (node) => {
-        if (node.isTextblock && node.type !== schema.nodes.code)
+        if (node.isTextblock && node.type !== schema.nodes.code_block)
             allCode = false;
     });
 
@@ -137,7 +137,7 @@ export function toggleCodeBlock(
         return setBlockType(schema.nodes.paragraph)(state, dispatch);
     } else {
         // Otherwise, set all to code block
-        return setBlockType(schema.nodes.code)(state, dispatch);
+        return setBlockType(schema.nodes.code_block)(state, dispatch);
     }
 }
 
@@ -257,7 +257,7 @@ export function codeBlockActive(state: EditorState) {
     const { from, to } = state.selection;
     let active = false;
     state.doc.nodesBetween(from, to, (node) => {
-        if (node.type === state.schema.nodes.code) active = true;
+        if (node.type === state.schema.nodes.code_block) active = true;
     });
     return active;
 }

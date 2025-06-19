@@ -24,6 +24,7 @@ import {
     inLastTableCell,
     insertParagraphAfterTable,
     insertParagraphAfterCodeBlock,
+    insertParagraphAfterBlockquote,
     deleteTable,
 } from "./toolbar_utils";
 
@@ -79,8 +80,11 @@ export function tableAndCodeExitKeymap(schema: Schema) {
         if (inLastTableCell(state)) {
           return insertParagraphAfterTable()(state, dispatch);
         }
-        if (state.selection.$from.parent.type.name === "code") {
+        if (state.selection.$from.parent.type.name === "code_block") {
           return insertParagraphAfterCodeBlock()(state, dispatch);
+        }
+        if (state.selection.$from.parent.type.name === "blockquote") {
+          return insertParagraphAfterBlockquote()(state, dispatch);
         }
         return false;
       }
@@ -141,7 +145,7 @@ export function codeBlockKeymap(schema: Schema) {
         "Shift-Enter": (state, dispatch) => {
             const { $from } = state.selection;
             for (let d = $from.depth; d > 0; d--) {
-                if ($from.node(d).type === schema.nodes.code) {
+                if ($from.node(d).type === schema.nodes.code_block) {
                     if (dispatch) {
                         dispatch(
                             state.tr
@@ -154,7 +158,6 @@ export function codeBlockKeymap(schema: Schema) {
                     return true;
                 }
             }
-            // Always insert a break if not in code as well
             if (dispatch) {
                 dispatch(
                     state.tr
@@ -169,7 +172,7 @@ export function codeBlockKeymap(schema: Schema) {
         Tab: (state, dispatch) => {
             const { $from, $to } = state.selection;
             for (let d = $from.depth; d > 0; d--) {
-                if ($from.node(d).type === schema.nodes.code) {
+                if ($from.node(d).type === schema.nodes.code_block) {
                     if (dispatch) {
                         let tr = state.tr;
                         if (state.selection.empty) {
@@ -200,7 +203,7 @@ export function codeBlockKeymap(schema: Schema) {
         "Shift-Tab": (state, dispatch) => {
             const { $from, $to } = state.selection;
             for (let d = $from.depth; d > 0; d--) {
-                if ($from.node(d).type === schema.nodes.code) {
+                if ($from.node(d).type === schema.nodes.code_block) {
                     if (dispatch) {
                         let tr = state.tr;
                         const start = $from.pos;
@@ -235,7 +238,7 @@ function autoClosePair(open: string, close: string, schema: Schema) {
     return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
         const { $from } = state.selection;
         for (let d = $from.depth; d > 0; d--) {
-            if ($from.node(d).type === schema.nodes.code) {
+            if ($from.node(d).type === schema.nodes.code_block) {
                 if (dispatch) {
                     const tr = state.tr.insertText(open + close);
                     const pos = state.selection.from + 1;

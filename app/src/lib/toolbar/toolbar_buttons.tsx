@@ -5,11 +5,11 @@ import {
   increaseIndent,
   toggleBlockquote,
   toggleBold,
-  toggleInlineCode,
   toggleItalic,
   toggleStrikethrough,
   toggleSubscript,
   toggleSuperscript,
+  toggleCodeBlock,
 } from "./toolbar_commands";
 import { copyFormatPainter, applyFormatPainter, FormatPainterState } from "./toolbar_utils";
 import { useDispatchCommand, useEditorState } from "../../components/Editor";
@@ -170,18 +170,12 @@ export const toolbarButtons: {
         editorStateAccessor ? blockquoteActive(editorStateAccessor()) : false,
     });
     this.codeButton = buttonValuesToJSXElement({
-      // Set the icon and label
       icon: "bi-code",
-      label: "Inline Code",
-      // When clicked toggle the inline code
-      onClick: () => dispatchCommand(toggleInlineCode),
-      // Use markActive to check if the mark is already active, from bold/italic
+      label: "Code Block",
+      onClick: () => dispatchCommand(toggleCodeBlock),
       active: () =>
         editorStateAccessor
-          ? markActive(
-              editorStateAccessor(),
-              editorStateAccessor().schema.marks.code,
-            )
+          ? editorStateAccessor().selection.$from.parent.type.name === "code_block"
           : false,
     });
   },

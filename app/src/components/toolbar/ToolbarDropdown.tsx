@@ -77,11 +77,14 @@ export const ToolbarDropdown: Component<{
               title={typeof opt.label === "string" ? opt.label : undefined}
               onClick={() => {
                 opt.onClick();
-                setOpen(false);
+                // Only close the dropdown if this is NOT the Insert Table option
+                if (opt.icon !== "bi-table") {
+                  setOpen(false);
+                }
+                // If it's the Insert Table option, keep the dropdown open so the grid selector can show
               }}
             >
               <i class={`bi ${opt.icon}`} />
-              {/* Only show label if present and not empty */}
               {opt.label && (
                 <span class="toolbar-dropdown-label">{opt.label}</span>
               )}

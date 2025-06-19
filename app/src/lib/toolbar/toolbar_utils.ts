@@ -124,7 +124,7 @@ export function insertParagraphAfterCodeBlock() {
         const { $from } = state.selection;
         for (let d = $from.depth; d > 0; d--) {
             const node = $from.node(d);
-            if (node.type.name === "code") {
+            if (node.type.name === "code_block") {
                 const pos = $from.after(d);
                 if (dispatch) {
                     const paragraph = state.schema.nodes.paragraph.create();
@@ -138,6 +138,27 @@ export function insertParagraphAfterCodeBlock() {
         }
         return false;
     };
+}
+
+export function insertParagraphAfterBlockquote() {
+  return (state: EditorState, dispatch?: (tr: Transaction) => void) => {
+    const { $from } = state.selection;
+    for (let d = $from.depth; d > 0; d--) {
+      const node = $from.node(d);
+      if (node.type.name === "blockquote") {
+        const pos = $from.after(d);
+        if (dispatch) {
+          const paragraph = state.schema.nodes.paragraph.create();
+          let tr = state.tr.insert(pos, paragraph);
+          const sel = Selection.near(tr.doc.resolve(pos + 1));
+          tr = tr.setSelection(sel);
+          dispatch(tr.scrollIntoView());
+        }
+        return true;
+      }
+    }
+    return false;
+  };
 }
 
 export function deleteTable(): import("prosemirror-state").Command {
