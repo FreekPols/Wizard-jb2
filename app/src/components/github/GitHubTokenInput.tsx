@@ -28,8 +28,12 @@ export const GitHubTokenInput = (props: Props) => {
   const handleShowInstructions = () => {
     showModal(
       <div style={{ color: "#000" }}>
-        <h2 style={{ color: "#000" }}>How to Create a GitHub Fine-Grained Personal Access Token</h2>
-        <ol style={{ color: "#000", "text-align": "left", "margin-left": "1em" }}>
+        <h2 style={{ color: "#000" }}>
+          How to Create a GitHub Fine-Grained Personal Access Token
+        </h2>
+        <ol
+          style={{ color: "#000", "text-align": "left", "margin-left": "1em" }}
+        >
           <li>
             Click{" "}
             <a
@@ -39,20 +43,22 @@ export const GitHubTokenInput = (props: Props) => {
               class="text-blue-600 underline text-sm"
             >
               here
-            </a>
-            {" "}to open the token creation menu.
+            </a>{" "}
+            to open the token creation menu.
           </li>
           <li>
             <b>Name</b> your token and set an <b>expiration</b> if desired.
           </li>
           <li>
-            Under <b>Resource owner</b>, select <b>Your account</b>, if it was not already preselected.
+            Under <b>Resource owner</b>, select <b>Your account</b>, if it was
+            not already preselected.
           </li>
           <li>
             Under <b>Repository access</b>, choose <b>All repositories</b>.
           </li>
           <li>
-            Under <b>Repository permissions</b>, set <b>Contents</b> to <b>Read and write</b>.
+            Under <b>Repository permissions</b>, set <b>Contents</b> to{" "}
+            <b>Read and write</b>.
           </li>
           <li>
             Scroll down and click <b>Generate token</b>.
@@ -62,9 +68,10 @@ export const GitHubTokenInput = (props: Props) => {
           </li>
         </ol>
         <div style={{ "font-size": "0.95em", color: "#b91c1c" }}>
-          <b>Note:</b> This token will not be visible again. If you want to use it more, save it somewhere.
+          <b>Note:</b> This token will not be visible again. If you want to use
+          it more, save it somewhere.
         </div>
-      </div>
+      </div>,
     );
   };
 
