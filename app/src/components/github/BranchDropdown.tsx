@@ -107,8 +107,18 @@ export const BranchDropdown: Component = () => {
           "line-height": "1",
         }}
       >
-        <i class="bi bi-git" style={{ "font-size": "1.1em", "margin-right": "0.3em" }} />
-        <span style={{ "max-width": "80px", overflow: "hidden", "text-overflow": "ellipsis", "white-space": "nowrap" }}>
+        <i
+          class="bi bi-git"
+          style={{ "font-size": "1.1em", "margin-right": "0.3em" }}
+        />
+        <span
+          style={{
+            "max-width": "80px",
+            overflow: "hidden",
+            "text-overflow": "ellipsis",
+            "white-space": "nowrap",
+          }}
+        >
           {github.getBranch()}
         </span>
       </button>
