@@ -1,17 +1,15 @@
 ![coverage](https://gitlab.ewi.tudelft.nl/cse2000-software-project/2024-2025/cluster-j/10c/10c/badges/main/coverage.svg)
-# Editor for Teachbooks
+# Editor for TeachBooks
 
-A complete browser-based, what-you-see-is-what-you-get editor to streamline the process of editing Teachbooks hosted on GitHub pages.
+A complete browser-based, what-you-see-is-what-you-get editor to streamline the process of editing TeachBooks hosted on GitHub pages.
 
 ![image](https://github.com/user-attachments/assets/506238db-2ec7-4241-86d7-3ab20f14e799)
-
-Maybe a small tutorial here?
 
 # Install the editor
 
 The editor is made for everyone, not just programmers. So we made the installation process as easy as possible:
 
-1. Go to your Teachbooks repo root
+1. Go to your TeachBooks repo root
 2. In `requirements.txt` add the following two lines at the bottom of the file:
     ```txt
     --extra-index-url https://test.pypi.org/simple/
@@ -75,8 +73,8 @@ For loading the editor into the book we use a custom Sphinx Extension. You need 
    This will create a `dist` folder in the `sphinx_extension` folder.
 
 ### Running the editor in an actual book
-We assume you already have a working Teachbooks installed locally. If not you can get the template [here](https://github.com/TeachBooks/template).
-1. Open the `_config` file in the `book` folder of your Teachbooks project.
+We assume you already have a working TeachBooks installed locally. If not you can get the template [here](https://github.com/TeachBooks/template).
+1. Open the `_config` file in the `book` folder of your TeachBooks project.
 2. Find the `extra_extensions:` area and add the following to the bottom of the list:
     ```yml
     - teachbooks_software_project_extension_name
