@@ -201,13 +201,13 @@ export const schema = new Schema({
         unsupported_block: {
             attrs: {
                 myst: { default: null },
-                editable: { default: true }, // Changed to true
+                editable: { default: false },
             },
             toDOM(_node) {
-                return ["pre", { class: `unsupported_block`, style: "border: 1px solid orange; padding: 5px;" }, ["code", 0]];
+                return ["pre", { class: `unsupported_block` }, ["code", 0]];
             },
             group: "flowContent",
-            content: "flowContent*", // Changed from text* to flowContent*
+            content: "text*",
         },
         target: {
             attrs: { label: string() },
@@ -218,20 +218,12 @@ export const schema = new Schema({
             content: "text*",
         },
         directive: {
-            attrs: { 
-                name: { default: "" }, 
-                args: { default: "" }, 
-                value: { default: "" } 
-            },
-            group: "block",
-            // This is the "magic" line: allow flowContent OR raw text fallback
-            content: "(flowContent | text)*", 
+            attrs: { name: string(), args: string(), value: string() },
+            group: "flowContent",
             toDOM(node) {
-                return ["div", { 
-                    "data-directive": node.attrs.name, 
-                    class: "myst-directive unknown-directive" 
-                }, 0];
+                return ["div", { "data-directive": node.attrs.name }, 0];
             },
+            content: "flowContent*",
         },
         admonition: {
             attrs: {
