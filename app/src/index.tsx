@@ -19,27 +19,29 @@ if (!(root instanceof HTMLElement)) {
     "Root element not found. Did you forget to add it to your index.html? Or maybe the id attribute got misspelled?",
   );
 }
+// 1. Get arguments from your Iframe URL
+const urlParams = new URLSearchParams(window.location.search);
+const pOwner  = urlParams.get('owner');
+const pRepo   = urlParams.get('repo');
+const pFile   = urlParams.get('file'); // e.g., "content/intro.md"
+const pBranch = urlParams.get('branch') || "main";
 
-//initialise github info
-const ref = getRepositoryLink();
-getCurrentFileHref();
-
-if (ref != null) {
-  const ownerRepo = parseOwnerRepoFromHref(ref);
-  if (ownerRepo != undefined) {
-    github.setRepo(ownerRepo.repo);
-    github.setOwner(ownerRepo.owner);
-  } else {
-    console.warn("Database not initialised - failed to parse href.");
-    github.setRepo("repo");
-    github.setBranch("branch");
-    github.setOwner("owner");
-  }
+// 2. Initialize the GitHub state
+if (pOwner && pRepo) {
+    // Set the core repository info
+    github.setOwner(pOwner);
+    github.setRepo(pRepo);
+    github.setBranch(pBranch);
+    
+    // If a specific file is provided, we "fake" the edit link 
+    // so the GithubUtility signals pick it up.
+    if (pFile) {
+        const fakeEditHref = `https://github.com/${pOwner}/${pRepo}/edit/${pBranch}/${pFile}`;
+        setCurrentFileHref(fakeEditHref); 
+        console.log("Forcing editor to file:", pFile);
+    }
 } else {
-  console.warn("Database not initialised - no github repo link found.");
-  github.setRepo("repo");
-  github.setBranch("branch");
-  github.setOwner("owner");
+    console.log("oops");
 }
 
 window.addEventListener("beforeunload", async () => {
