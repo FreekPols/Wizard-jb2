@@ -51,7 +51,7 @@ export function mystToProseMirror(myst: GenericParent): Node {
         if (Array.isArray(res)) {
             throw new TypeError("Final parse result should not be array");
         }
-        console.log("Standard successful.");
+        console.log("Standard successful.", res);
         return res;
     } catch (e) {
         if (e instanceof RangeError && e.message.includes("Invalid content")) {
