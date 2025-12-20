@@ -1,3 +1,9 @@
+# Update December 2025 - JB2 
+
+- changed app/index.tsx so we can use the page in an iframe. Necessary arguments are being passed via the url. => owner, repo, file. 
+
+
+
 ![coverage](https://gitlab.ewi.tudelft.nl/cse2000-software-project/2024-2025/cluster-j/10c/10c/badges/main/coverage.svg)
 # Editor for TeachBooks
 

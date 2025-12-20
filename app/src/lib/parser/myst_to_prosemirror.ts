@@ -219,25 +219,14 @@ const handlers = {
     },
     mystTarget: (node: Target) =>
         schema.node("target", { label: node.label?.trim()?.toLowerCase() }),
-    mystDirective: (node: Directive, safe: boolean) => {
-        const isSupported = SUPPORTED_DIRECTIVES.includes(node.name);
-    
-        let content;
-        if (isSupported) {
-            // If it's a note, tip, warning, etc., parse it normally
-            content = children(node, safe);
-        } else {
-            // If it's unknown (like 'pdf'), reconstruct the text so it's visible
-            const rawText = `:::{${node.name}} ${node.args || ""}\n${node.value || ""}\n:::`;
-            content = [schema.text(rawText)];
-        }
-    
-        return schema.node(
+    mystDirective: (node: Directive, safe: boolean) =>
+        schema.node(
             "directive",
             pick(node, "name", "value", "args"),
-            content,
-        );
-    },
+            SUPPORTED_DIRECTIVES.includes(node.name)
+                ? children(node, safe)
+                : undefined,
+        ),
     admonition: (node: Admonition, safe: boolean) =>
         schema.node(
             "admonition",
