@@ -202,18 +202,15 @@ const handlers = {
             schema.text(node.value),
         ),
     iframe: (node: any) => {
-        // Construct the MyST directive string
-        // We include the src and any other attributes present in the node
-        console.log("Iframe handler is running with node:", node); // ADD THIS
-        
         const webpage = node.src || "";
         const width = node.width ? `\n:width: ${node.width}` : "";
         const height = node.height ? `\n:height: ${node.height}` : "";
         const mystString = `:::{iframe} ${webpage}${width}${height}\n:::`;
 
+        // Use code_block instead of paragraph
         return schema.node(
-            "paragraph",
-            {},
+            "code_block", 
+            { lang: "myst" }, // Tagging it as MyST can help with styling
             [schema.text(mystString)]
         );
     },
