@@ -204,6 +204,8 @@ const handlers = {
     iframe: (node: any) => {
         // Construct the MyST directive string
         // We include the src and any other attributes present in the node
+        console.log("Iframe handler is running with node:", node); // ADD THIS
+        
         const webpage = node.src || "";
         const width = node.width ? `\n:width: ${node.width}` : "";
         const height = node.height ? `\n:height: ${node.height}` : "";
