@@ -200,12 +200,20 @@ const handlers = {
             ),
             schema.text(node.value),
         ),
-    iframe: (node: any) => 
-        schema.node(
-            "paragraph", 
-            {}, 
-            [schema.text("this is an iframe")]
-        ),
+    iframe: (node: any) => {
+        // Construct the MyST directive string
+        // We include the src and any other attributes present in the node
+        const webpage = node.src || "";
+        const width = node.width ? `\n:width: ${node.width}` : "";
+        const height = node.height ? `\n:height: ${node.height}` : "";
+        const mystString = `:::{iframe} ${webpage}${width}${height}\n:::`;
+
+        return schema.node(
+            "paragraph",
+            {},
+            [schema.text(mystString)]
+        );
+    },
     inlineCode: (node: { value: string }) =>
         schema.text(node.value, [schema.mark("code")]),
     table: (node: Table, safe: boolean) =>
