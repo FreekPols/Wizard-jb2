@@ -2,17 +2,18 @@
 import { Schema, Mark } from "prosemirror-model";
 import { boolean, integer, oneOf, string } from "./utils";
 
-const ADMONITION_SETTINGS: Record<string, { border: string; bg: string }> = {
-  note:      { border: "#2196f3", bg: "#e3f2fd" },
-  tip:       { border: "#4caf50", bg: "#e8f5e9" },
-  hint:      { border: "#4caf50", bg: "#e8f5e9" },
-  important: { border: "#9c27b0", bg: "#f3e5f5" },
-  warning:   { border: "#ff9800", bg: "#fff3e0" },
-  danger:    { border: "#f44336", bg: "#ffebee" },
-  default:   { border: "#607d8b", bg: "#eceff1" },
+const ADMONITION_SETTINGS: Record<string, { border: string; titleBg: string;}> = {
+  // We use the border color, and a titleBg that is much closer to it
+  note:      { border: "#2196f3", titleBg: "#64b5f6"},
+  tip:       { border: "#4caf50", titleBg: "#81c784"},
+  hint:      { border: "#4caf50", titleBg: "#81c784"},
+  important: { border: "#9c27b0", titleBg: "#ba68c8"},
+  warning:   { border: "#ff9800", titleBg: "#ffb74d"},
+  danger:    { border: "#f44336", titleBg: "#e57373"},
+  default:   { border: "#607d8b", titleBg: "#90a4ae"},
 };
 
-const CONTENT_BG = "#fafafa"; // Slightly off-white
+const CONTENT_BG = "#f9f9f9"; // Slightly off-white
 
 
 export const schema = new Schema({
@@ -253,17 +254,17 @@ export const schema = new Schema({
                 "div",
                 {
                     class: `admonition ${kind}`,
-                    // We set a CSS variable (--accent) so the title can use it
                     style: `
                     background-color: ${CONTENT_BG}; 
-                    border-right: 5px solid ${colors.border}; 
-                    --accent: ${colors.border}; 
-                    --accent-bg: ${colors.bg};
-                    border-radius: 6px;
-                    margin: 1em 0;
+                    border-left: 6px solid ${colors.border}; 
+                    --title-bg: ${colors.titleBg};
+                    border-radius: 4px;
+                    margin: 1.5em 0;
                     overflow: hidden;
                     display: block;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                    border-top: 1px solid rgba(0,0,0,0.05);
+                    border-right: 1px solid rgba(0,0,0,0.05);
+                    border-bottom: 1px solid rgba(0,0,0,0.05);
                     `,
                 },
                 0,
@@ -279,13 +280,13 @@ export const schema = new Schema({
                 {
                     class: "admonition-title",
                     style: `
-                    padding: 6px 12px;
-                    font-weight: bold;
-                    /* This pulls the color from the parent's variable */
-                    background-color: var(--accent);
-                    color: white; 
-                    font-size: 0.9em;
+                    padding: 8px 12px;
+                    font-weight: 700;
+                    background-color: var(--title-bg);
+                    color: var(--title-text);
+                    font-size: 0.85rem;
                     display: block;
+                    letter-spacing: 0.02em;
                     `,
                 },
                 0,
