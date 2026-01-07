@@ -244,8 +244,8 @@ export const schema = new Schema({
                 kind: { default: "note" },
                 class: { default: "" },
             },
-            content: "admonitionTitle? admonitionContent",
-            group: "block",
+            group: "flowContent",
+            content: "admonitionTitle? flowContent*",
             toDOM(node) {
                 const kind = node.attrs.kind || "note";
                 const colors = ADMONITION_SETTINGS[kind] || ADMONITION_SETTINGS.default;
@@ -270,13 +270,6 @@ export const schema = new Schema({
                 0,
                 ];
             },
-        },
-
-        admonitionContent: {
-            content: "text*",
-            toDOM: () => ["div", { 
-                class: "admonition-body px-4 py-1",
-            }, 0]
         },
 
         admonitionTitle: {
