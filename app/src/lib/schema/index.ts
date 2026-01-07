@@ -245,7 +245,7 @@ export const schema = new Schema({
                 class: { default: "" },
             },
             group: "flowContent",
-            content: "admonitionTitle? flowContent*",
+            content: "admonitionTitle? admonitionContent",
             toDOM(node) {
                 const kind = node.attrs.kind || "note";
                 const colors = ADMONITION_SETTINGS[kind] || ADMONITION_SETTINGS.default;
@@ -267,9 +267,16 @@ export const schema = new Schema({
                     border-bottom: 1px solid rgba(0,0,0,0.05);
                     `,
                 },
-                ["div", { class: "px-4 py-1" }, 0],
+                0,
                 ];
             },
+        },
+
+        admonitionContent: {
+            content: "flowContent*",
+            toDOM: () => ["div", { 
+                class: "admonition-body px-4 py-1",
+            }, 0]
         },
 
         admonitionTitle: {
