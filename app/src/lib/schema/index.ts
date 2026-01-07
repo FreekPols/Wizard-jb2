@@ -2,15 +2,17 @@
 import { Schema, Mark } from "prosemirror-model";
 import { boolean, integer, oneOf, string } from "./utils";
 
-const ADMONITION_COLORS: Record<string, { bg: string; border: string; accent: string }> = {
-  note: { bg: "#e3f2fd", border: "#2196f3", accent: "#1976d2" },
-  warning: { bg: "#fff3e0", border: "#ff9800", accent: "#ef6c00" },
-  danger: { bg: "#ffebee", border: "#f44336", accent: "#c62828" },
-  tip: { bg: "#e8f5e9", border: "#4caf50", accent: "#2e7d32" },
-  important: { bg: "#f3e5f5", border: "#9c27b0", accent: "#7b1fa2" },
-  // Fallback for unknown types
-  default: { bg: "#f5f5f5", border: "#9e9e9e", accent: "#616161" }
+const ADMONITION_SETTINGS: Record<string, { border: string; bg: string }> = {
+  note:      { border: "#2196f3", bg: "#e3f2fd" },
+  tip:       { border: "#4caf50", bg: "#e8f5e9" },
+  hint:      { border: "#4caf50", bg: "#e8f5e9" },
+  important: { border: "#9c27b0", bg: "#f3e5f5" },
+  warning:   { border: "#ff9800", bg: "#fff3e0" },
+  danger:    { border: "#f44336", bg: "#ffebee" },
+  default:   { border: "#607d8b", bg: "#eceff1" },
 };
+
+const CONTENT_BG = "#fafafa"; // Slightly off-white
 
 
 export const schema = new Schema({
@@ -236,7 +238,6 @@ export const schema = new Schema({
             content: "flowContent*",
         },
         
-        // In your schema definition:
         admonition: {
             attrs: {
                 kind: { default: "note" },
@@ -246,19 +247,23 @@ export const schema = new Schema({
             content: "admonitionTitle? flowContent*",
             toDOM(node) {
                 const kind = node.attrs.kind || "note";
-                const colors = ADMONITION_COLORS[kind] || ADMONITION_COLORS.default;
+                const colors = ADMONITION_SETTINGS[kind] || ADMONITION_SETTINGS.default;
 
                 return [
                 "div",
                 {
                     class: `admonition ${kind}`,
+                    // We set a CSS variable (--accent) so the title can use it
                     style: `
-                    background-color: ${colors.bg}; 
-                    border: 2px solid ${colors.border}; 
+                    background-color: ${CONTENT_BG}; 
+                    border-right: 5px solid ${colors.border}; 
+                    --accent: ${colors.border}; 
+                    --accent-bg: ${colors.bg};
                     border-radius: 6px;
                     margin: 1em 0;
                     overflow: hidden;
                     display: block;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
                     `,
                 },
                 0,
@@ -268,10 +273,7 @@ export const schema = new Schema({
 
         admonitionTitle: {
             content: "text*",
-            toDOM(node) {
-                // We need to look at the parent node to get the color, 
-                // but in ProseMirror toDOM, we usually style the title based on CSS classes
-                // or just use a generic "strong" look.
+            toDOM() {
                 return [
                 "div",
                 {
@@ -279,10 +281,11 @@ export const schema = new Schema({
                     style: `
                     padding: 6px 12px;
                     font-weight: bold;
-                    border-bottom: 1px solid rgba(0,0,0,0.05);
-                    /* We can use a CSS variable or a default dark color */
-                    color: #333; 
+                    /* This pulls the color from the parent's variable */
+                    background-color: var(--accent);
+                    color: white; 
                     font-size: 0.9em;
+                    display: block;
                     `,
                 },
                 0,
