@@ -281,6 +281,8 @@ export const Editor: ParentComponent<EditorProps> = (props) => {
     // Parse markdown into a ProseMirror Node
     const doc = parseMyst(markdown);
 
+    console.log("doc", doc, "and markdown: ", markdown);
+
     // Debugging
     // console.log("Parsed: \n" + doc);
 

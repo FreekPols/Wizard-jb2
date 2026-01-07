@@ -6,6 +6,19 @@
 
 - error is somewhere in transformAst function in myst_to_prosemirror.ts
 
+- todo, fix iframe using directive?
+iframe: (node: any) => {
+    // We pass the raw data into a 'directive' node type
+    // This tells ProseMirror "this is a MyST directive"
+    return schema.node("directive", {
+        name: "iframe",
+        args: node.src || "",
+        // We store additional attributes in the 'value' or handle them in the serializer
+        value: (node.width ? `:width: ${node.width}\n` : "") + 
+               (node.height ? `:height: ${node.height}` : "")
+    });
+}
+
 ![coverage](https://gitlab.ewi.tudelft.nl/cse2000-software-project/2024-2025/cluster-j/10c/10c/badges/main/coverage.svg)
 # Editor for TeachBooks
 
