@@ -273,7 +273,7 @@ export const schema = new Schema({
         },
 
         admonitionContent: {
-            content: "flowContent*",
+            content: "text*",
             toDOM: () => ["div", { 
                 class: "admonition-body px-4 py-1",
             }, 0]
