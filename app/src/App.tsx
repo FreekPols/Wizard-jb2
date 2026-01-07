@@ -10,6 +10,21 @@ import { HintTooltip } from "./components/toolbar/HintTooltip";
  *
  * [SolidJS]: https://docs.solidjs.com
  */
+
+import { mystToHtml } from 'myst-to-html';
+
+const node = {
+  type: 'admonition',
+  kind: 'warning',
+  children: [
+    { type: 'admonitionTitle', children: [{ type: 'text', value: 'Heads Up!' }] },
+    { type: 'paragraph', children: [{ type: 'text', value: 'This is the content.' }] }
+  ]
+};
+
+const html = mystToHtml(node);
+console.log(html);
+
 export default function App() {
   return (
     <>
