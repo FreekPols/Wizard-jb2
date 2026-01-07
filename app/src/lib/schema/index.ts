@@ -267,7 +267,7 @@ export const schema = new Schema({
                     border-bottom: 1px solid rgba(0,0,0,0.05);
                     `,
                 },
-                0,
+                ["div", { class: "px-4 py-1" }, 0],
                 ];
             },
         },
