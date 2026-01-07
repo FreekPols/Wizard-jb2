@@ -4,7 +4,7 @@ import { boolean, integer, oneOf, string } from "./utils";
 
 const ADMONITION_SETTINGS: Record<string, { border: string; titleBg: string;}> = {
   // We use the border color, and a titleBg that is much closer to it
-  note:      { border: "#2196f3", titleBg: "#64b5f6"},
+  note:      { border: rgb(59, 130, 246), titleBg: rgb(239, 246, 255)},
   tip:       { border: "#4caf50", titleBg: "#81c784"},
   hint:      { border: "#4caf50", titleBg: "#81c784"},
   important: { border: "#9c27b0", titleBg: "#ba68c8"},
