@@ -226,7 +226,22 @@ export const schema = new Schema({
         },
         admonition: {
             attrs: {
-                kind: { default: "note" },
+                kind: oneOf({
+                    values: [
+                        "attention",
+                        "caution",
+                        "danger",
+                        "error",
+                        "hint",
+                        "important",
+                        "note",
+                        "seealso",
+                        "tip",
+                        "warning",
+                        "topic", // <-- add "topic" if needed
+                    ] as const,
+                }),
+                class: string(),
             },
             group: "flowContent",
             // This ensures the title is always the first child if it exists
@@ -250,29 +265,29 @@ export const schema = new Schema({
                 0, // This is where admonitionTitle and flowContent will be rendered
                 ];
             },
-            },
+        },
 
-            admonitionTitle: {
-                content: "inline*",
-                // The title is "inside" because it's rendered into the '0' hole above
-                toDOM() {
-                    return [
-                    "div",
-                    {
-                        class: "admonition-title",
-                        style: `
-                        background-color: red;
-                        color: white;
-                        padding: 4px 12px;
-                        font-weight: bold;
-                        text-transform: uppercase;
-                        font-size: 0.8em;
-                        `,
-                    },
-                    0, // This is where the actual title text goes
-                    ];
+        admonitionTitle: {
+            content: "inline*",
+            // The title is "inside" because it's rendered into the '0' hole above
+            toDOM() {
+                return [
+                "div",
+                {
+                    class: "admonition-title",
+                    style: `
+                    background-color: red;
+                    color: white;
+                    padding: 4px 12px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    font-size: 0.8em;
+                    `,
                 },
+                0, // This is where the actual title text goes
+                ];
             },
+        },
         container: {
             attrs: { kind: oneOf({ values: ["figure", "table"] as const }) },
             group: "flowContent",
