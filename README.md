@@ -37,6 +37,10 @@ The file should look like this:
 
 An example can be found [here](https://github.com/luukfroling/Jupyter-book-editor/blob/main/.github/workflows/deploy.yml)
 
+# Unknown nodetypes
+
+As the wizard was originally designed for JB1, there will be unknown nodetypes which have not been tested/implemented yet. Please open an issue if any are found!
+
 # Using the editor
 
 todo 
