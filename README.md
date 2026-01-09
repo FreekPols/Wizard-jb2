@@ -1,10 +1,12 @@
 # Jupyter Book 2 Wizard
 
-⚠️ Untill this issue ⚠️
+An editing interface to edit Jupyter Books in the browser, based on the [TeachBook wizard](https://github.com/TeachBooks/Wizard/tree/main). 
+
+⚠️ Currently it is not possible to add javascript to Jupyter Books ([see this issue](https://github.com/jupyter-book/mystmd/issues/1040)). As a temporary solution, this project uses GitHub actions to add the required JS file (`script/start_wizard.js`) to the book after building.  
 
 # Using the editor 
 
-Once GitHub pages are setup according to the docs, add the following section of code to 
+Once GitHub pages are setup according to the [docs](https://mystmd.org/guide/deployment-github-pages), add the following section of code after 'Build HTML Assets' in `.github\workflows\deploy.yml`: 
 
 ```{code}
 - name: Add wizard to book
@@ -17,8 +19,6 @@ with:
 The file should look like this: 
 
 ```{code}
-:linenos:
-:emphasize-lines: 4,5,6,7,8
 - name: Build HTML Assets
   run: myst build --html
 
@@ -34,5 +34,7 @@ The file should look like this:
     path: './_build/html'
 
 ```
+
+An example can be found [here](https://github.com/luukfroling/Jupyter-book-editor/blob/main/.github/workflows/deploy.yml)
 
  
