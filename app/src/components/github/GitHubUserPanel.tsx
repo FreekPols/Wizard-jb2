@@ -127,14 +127,49 @@ export const GitHubUserPanel = (props: Props) => {
     }
 
     try {
+      const sourceBranch = github.getBranch();
       await github.ensureBranchExists(inputBranchName);
+
+      const keys = selectedFiles()
+        .entries()
+        .map(([a, _]) => a)
+        .toArray() as string[];
+      const missing: string[] = [];
+      for (const key of keys) {
+        let value = await database.loadFrom<string>(
+          "markdown",
+          github.getRepo(),
+          sourceBranch,
+          key,
+        );
+        if (value === undefined) {
+          try {
+            value = await github.fetchFileFromBranch(key, sourceBranch);
+          } catch (err) {
+            value = undefined;
+          }
+        }
+        if (value === undefined) {
+          missing.push(key);
+          continue;
+        }
+        await database.saveTo(
+          "markdown",
+          github.getRepo(),
+          inputBranchName,
+          key,
+          value,
+        );
+      }
+      if (missing.length) {
+        setStatus(`Missing files for keys: ${missing.join(", ")}`);
+        return;
+      }
+
       github.setBranch(inputBranchName);
       await github.commitMultipleFromDatabase(
         inputCommitMsg,
-        selectedFiles()
-          .entries()
-          .map(([a, _]) => a)
-          .toArray() as IDBValidKey[],
+        keys as IDBValidKey[],
         "markdown",
       );
 
