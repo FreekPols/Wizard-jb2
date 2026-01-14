@@ -224,14 +224,14 @@ export const GitHubUserPanel = (props: Props) => {
   return (
     <div>
       <h2 class="text-xl font-bold mb-2">Logged in as {props.user.login}</h2>
-      <div class="mt-6 grid gap-4">
+      <div class="mt-3 d-grid gap-4">
         <div>
-          <label class="block mb-2 font-semibold" for="commit-msg">
+          <label class="form-label fw-semibold" for="commit-msg">
             Commit message
           </label>
           <textarea
             id="commit-msg"
-            class="border rounded-md p-3 w-full bg-white"
+            class="form-control"
             rows={3}
             placeholder="Describe what you changed..."
             value={commitMsg()}
@@ -247,27 +247,20 @@ export const GitHubUserPanel = (props: Props) => {
               }
             }}
           />
-          <div class="text-xs text-gray-500 mt-1">
-            Press Ctrl/Command + Enter to submit.
-          </div>
+          <div class="form-text">Press Ctrl/Command + Enter to submit.</div>
         </div>
 
         {/* File selection submenu moved above the commit button */}
         <div>
-          <label class="block font-semibold mb-2">
-            Files to include
-          </label>
-          <div
-            class="border rounded p-3 bg-white overflow-y-auto"
-            style={{ "max-height": "160px" }}
-          >
+          <label class="form-label fw-semibold">Files to include</label>
+          <div class="border rounded p-3 bg-white overflow-y-auto" style={{ "max-height": "160px" }}>
             {availableFiles().length === 0 && (
-              <div class="text-gray-500">No files in database.</div>
+              <div class="text-muted">No files in database.</div>
             )}
             {availableFiles().length > 0 && (
-              <div class="mb-2">
-                <label class="block cursor-pointer font-semibold">
-                  <input
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
                     type="checkbox"
                     checked={
                       selectedFiles().size === availableFiles().length &&
@@ -282,16 +275,15 @@ export const GitHubUserPanel = (props: Props) => {
                         setSelectedFiles(new Set<string>());
                       }
                     }}
-                  />
-                  <span class="ml-2">Select all</span>
-                </label>
+                />
+                <label class="form-check-label fw-semibold">Select all</label>
               </div>
             )}
             <For each={availableFiles()}>
               {([key]) => (
-                <div class="mb-1">
-                  <label class="block cursor-pointer">
+                <div class="form-check mb-1">
                     <input
+                      class="form-check-input"
                       type="checkbox"
                       checked={selectedFiles().has(key)}
                       onChange={(e) => {
@@ -304,88 +296,99 @@ export const GitHubUserPanel = (props: Props) => {
                         setSelectedFiles(newSet);
                       }}
                     />
-                    <span class="ml-2">{key}</span>
-                  </label>
+                    <label class="form-check-label">{key}</label>
                 </div>
               )}
             </For>
           </div>
         </div>
 
-        <div class="grid gap-3">
-          <div class="border rounded-md p-3 bg-gray-50">
-            <div class="font-semibold mb-2">Action</div>
-            <label class="flex items-center gap-2 mb-2">
-              <input
-                type="radio"
-                name="git-action"
-                checked={actionMode() === "push"}
-                onChange={() => setActionMode("push")}
-              />
-              <span>Push to current branch ({github.getBranch() || "none"})</span>
-            </label>
-            <label class="flex items-center gap-2">
-              <input
-                type="radio"
-                name="git-action"
-                checked={actionMode() === "pr"}
-                onChange={() => setActionMode("pr")}
-              />
-              <span>Create pull request to {defaultBranch()}</span>
-            </label>
+        <div class="row g-3">
+          <div class="col-md-5">
+            <div class="border rounded p-3 bg-light h-100">
+              <div class="fw-semibold mb-2">Action</div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="git-action"
+                  checked={actionMode() === "push"}
+                  onChange={() => setActionMode("push")}
+                />
+                <label class="form-check-label">
+                  Push to current branch ({github.getBranch() || "none"})
+                </label>
+              </div>
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="git-action"
+                  checked={actionMode() === "pr"}
+                  onChange={() => setActionMode("pr")}
+                />
+                <label class="form-check-label">
+                  Create pull request to {defaultBranch()}
+                </label>
+              </div>
+            </div>
           </div>
 
-          <div
-            class={`border rounded-md p-3 ${actionMode() === "pr" ? "bg-white" : "bg-gray-100 opacity-60"}`}
-          >
-            <div class="font-semibold mb-2">Pull request branch</div>
-            <div class="text-xs text-gray-500 mb-2">
-              Choose a branch to push changes to before opening a pull request.
+          <div class="col-md-7">
+            <div
+              class={`border rounded p-3 h-100 ${actionMode() === "pr" ? "bg-white" : "bg-light opacity-75"}`}
+            >
+              <div class="fw-semibold mb-2">Pull request branch</div>
+              <div class="text-muted small mb-2">
+                Choose a branch to push changes to before opening a pull request.
+              </div>
+              <div class="d-grid gap-2 mb-2" style={{ "max-height": "160px", "overflow-y": "auto" }}>
+                <For each={remoteBranches()}>
+                  {(branch) => (
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        name="pr-branch"
+                        checked={prBranchChoice() === branch}
+                        onChange={() => setPrBranchChoice(branch)}
+                        disabled={actionMode() !== "pr"}
+                      />
+                      <label class="form-check-label">{branch}</label>
+                    </div>
+                  )}
+                </For>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="pr-branch"
+                    checked={prBranchChoice() === "__new__"}
+                    onChange={() => setPrBranchChoice("__new__")}
+                    disabled={actionMode() !== "pr"}
+                  />
+                  <label class="form-check-label">Create a new branch</label>
+                </div>
+              </div>
+              <input
+                id="branch-name"
+                type="text"
+                class="form-control"
+                placeholder="Enter new branch name"
+                value={newBranchName()}
+                onInput={(e) => setNewBranchName(e.currentTarget.value)}
+                disabled={actionMode() !== "pr" || prBranchChoice() !== "__new__"}
+              />
             </div>
-            <div class="grid gap-2 max-h-40 overflow-y-auto mb-2">
-              <For each={remoteBranches()}>
-                {(branch) => (
-                  <label class="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="pr-branch"
-                      checked={prBranchChoice() === branch}
-                      onChange={() => setPrBranchChoice(branch)}
-                      disabled={actionMode() !== "pr"}
-                    />
-                    <span>{branch}</span>
-                  </label>
-                )}
-              </For>
-              <label class="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="pr-branch"
-                  checked={prBranchChoice() === "__new__"}
-                  onChange={() => setPrBranchChoice("__new__")}
-                  disabled={actionMode() !== "pr"}
-                />
-                <span>Create a new branch</span>
-              </label>
-            </div>
-            <input
-              id="branch-name"
-              type="text"
-              class="border p-2 w-full"
-              placeholder="Enter new branch name"
-              value={newBranchName()}
-              onInput={(e) => setNewBranchName(e.currentTarget.value)}
-              disabled={actionMode() !== "pr" || prBranchChoice() !== "__new__"}
-            />
           </div>
         </div>
 
         {/* Status directly below the selection menu, no extra margin */}
-        {status() && <div class="text-center text-sm">{status()}</div>}
+        {status() && <div class="text-center small">{status()}</div>}
 
-        <div class="grid gap-2">
+        <div class="d-grid gap-2">
           <button
-            class="bg-black text-white px-4 py-2 rounded w-full"
+            class="btn btn-dark"
             onClick={() => {
               if (actionMode() === "pr") {
                 handleCreatePullRequest();
@@ -398,7 +401,7 @@ export const GitHubUserPanel = (props: Props) => {
           </button>
           <button
             onClick={() => props.onLogout()}
-            class="bg-gray-100 text-gray-800 px-4 py-2 rounded w-full"
+            class="btn btn-outline-secondary"
           >
             Logout
           </button>
