@@ -22,10 +22,31 @@ export const GitHubDropdown = () => {
       </button>
       <Show when={open()}>
         <Portal>
-          <div class="github-popup-backdrop" onClick={() => setOpen(false)}>
+          <div
+            class="github-popup-backdrop"
+            onClick={() => setOpen(false)}
+            style={{
+              position: "fixed",
+              inset: "0",
+              background: "rgba(20, 24, 38, 0.45)",
+              display: "flex",
+              "align-items": "flex-start",
+              "justify-content": "center",
+              padding: "72px 20px 40px",
+              "z-index": "2000",
+            }}
+          >
             <div
               class="github-popup-card"
               onClick={(e) => e.stopPropagation()}
+              style={{
+                width: "min(760px, 96vw)",
+                background: "#ffffff",
+                "border-radius": "16px",
+                "box-shadow": "0 24px 80px rgba(16, 20, 40, 0.2)",
+                border: "1px solid #e5e7eb",
+                overflow: "hidden",
+              }}
             >
               <div class="github-popup-header">
                 <div class="github-popup-title">
