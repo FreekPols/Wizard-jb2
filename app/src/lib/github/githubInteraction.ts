@@ -368,7 +368,11 @@ class GitHubInteraction {
         const repoInfo = await this.fetchRepoInfo(owner, repo);
 
         // Get commit info the the specified branch.
-        let commit = await this.fetchBranchCommitInfo(owner, repo, branch);
+        let commit: BranchCommitInfo | undefined;
+        const remoteBranches = await this.fetchRemoteBranches();
+        if (remoteBranches.includes(branch)) {
+            commit = await this.fetchBranchCommitInfo(owner, repo, branch);
+        }
 
         // If the branch does not exist on remote, attempt to create it from the default branch.
         if (commit === undefined) {
@@ -385,12 +389,21 @@ class GitHubInteraction {
             }
 
             //  Create the new branch using the sha from the default branch
-            await this.createBranch(
-                owner,
-                repo,
-                branch,
-                defaultInfo.sha, // ← now a valid 40-char SHA
-            );
+            try {
+                await this.createBranch(
+                    owner,
+                    repo,
+                    branch,
+                    defaultInfo.sha, // ← now a valid 40-char SHA
+                );
+            } catch (err) {
+                if (
+                    !(err instanceof Error) ||
+                    !err.message.includes("Reference already exists")
+                ) {
+                    throw err;
+                }
+            }
             // Check if the new branch now exists.
             commit = await this.fetchBranchCommitInfo(owner, repo, branch);
 
@@ -532,8 +545,8 @@ class GitHubInteraction {
         const owner = this.getOwner();
         const repo = this.getRepo();
         const repoInfo = await this.fetchRepoInfo(owner, repo);
-        const existing = await this.fetchBranchCommitInfo(owner, repo, branch);
-        if (existing) return;
+        const remoteBranches = await this.fetchRemoteBranches();
+        if (remoteBranches.includes(branch)) return;
 
         const baseInfo = await this.fetchBranchCommitInfo(
             owner,
@@ -545,7 +558,16 @@ class GitHubInteraction {
                 `Cannot create branch ${branch}: default branch ${repoInfo.default_branch} has no commit`,
             );
         }
-        await this.createBranch(owner, repo, branch, baseInfo.sha);
+        try {
+            await this.createBranch(owner, repo, branch, baseInfo.sha);
+        } catch (err) {
+            if (
+                !(err instanceof Error) ||
+                !err.message.includes("Reference already exists")
+            ) {
+                throw err;
+            }
+        }
     }
 
     /**

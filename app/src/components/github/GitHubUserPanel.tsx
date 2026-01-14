@@ -177,7 +177,12 @@ export const GitHubUserPanel = (props: Props) => {
           onInput={(e) => setCommitMsg(e.currentTarget.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              handleCommit();
+              e.preventDefault();
+              if (branchName().trim()) {
+                handleCreatePullRequest();
+              } else {
+                handleCommit();
+              }
             }
           }}
         />
