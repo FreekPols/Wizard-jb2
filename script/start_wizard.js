@@ -42,8 +42,7 @@ const addWizard = function() {
     console.log(`[wizard] Parsed Metadata - Owner: ${owner}, Repo: ${repo}, File: ${filePath}`);
 
     // 3. Construct Iframe
-    const urlParts = document.location.href.split('/');
-    const iframeBase = urlParts.slice(0, 4).join('/') + '/';
+    const iframeBase = 'https://luukfroling.github.io/Wizard-jb2/';
     const finalUrl = `${iframeBase}?owner=${owner}&repo=${repo}&file=${filePath}`;
     
     console.log("[wizard] Iframe URL:", finalUrl);

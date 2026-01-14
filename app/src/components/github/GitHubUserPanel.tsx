@@ -194,6 +194,12 @@ export const GitHubUserPanel = (props: Props) => {
             Commit
           </button>
           <button
+            class="bg-black text-white px-4 py-2 rounded flex-1"
+            onClick={() => console.log("test")}
+          >
+            test
+          </button>
+          <button
             onClick={() => props.onLogout()}
             class="bg-black text-white px-4 py-2 rounded flex-1"
           >
